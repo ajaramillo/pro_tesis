@@ -1,0 +1,899 @@
+\Pag{Estudio computacional}
+\sectionm{Estudio computacional}
+\subsection{Identificaci\'on subproblemas y elementos importantes}
+
+\subsubsection{Algoritmos generales}\label{sec:codigos_generales}
+\quad Para comenzar el estudio computacional, escribiremos los algoritmos del programa realizado en FORTRAN y nos referiremos a sus secciones y subsecciones con la profundidad que sea necesaria.
+
+\quad El primer Algoritmo, y por ende el m\'as gen\'erico del programa (al que llamaremos \emph{Main} o \emph{Principal}) es:
+
+\begin{algorithm}[H]
+ \caption{Main}\label{algo:main_completo}
+\SetAlgoLined
+\LinesNumbered
+\KwIn{Par\'ametros}
+\KwOut{Datos de C\'alculos}
+\Begin{Carga de par\'ametros y definici\'on de variables\;
+Inicializaci\'on de $\rho(0)$\;\label{linea:main_ini_rho}
+Integraci\'on y registro\;\label{linea:main_int_regdatos}
+}
+\end{algorithm}
+
+\quad Dada esta descripci\'on, la l\'inea o secci\'on de mayor importancia del programa \emph{main} ser\'a la \ref{linea:main_int_regdatos}, esto dado que los tiempos de c\'omputo de primera secci\'on es despreciable.\\
+
+\quad El algoritmo para la integraci\'on y registro de datos es el mismo que el expresado en Algoritmo \ref{algo:heun}, pero esta vez a\~nadiendo el c\'alculo de las cantidades f\'isicas deseadas de obtener a partir de $\rho$ y el registro de \'estas. Esto lo describimos a continuaci\'on:
+
+\begin{algorithm}[H]
+\caption{Main: Integraci\'on y registro}\label{algo:main_int}
+\LinesNumbered
+\KwIn{$f$, $\rho_0$, $h$, $n$, $\{t_i\}_{i=0}^{n-1}$, $\epsilon$}
+\KwOut{$\{Calculos(\rho_i)\}_{i=1}^{n-1}$}
+\Begin{\For{$i=0$ hasta $i=n-1$}
+  {
+  $Calculos(\rho_i)$ y registro\;\label{linea:main_int_calculos}
+  $\rho_{i+1}^{(0)}=\rho_i+hf(t_i,\rho_i)$\;
+  $\rho_{i+1}^{(1)}=\rho_i+\frac{h}{2}\left\{f(t_i,\rho_i+f\left(t_{i+1},\rho_{i+1}^{(0)}\right)\right\}$\;\label{linea:main_int_f}
+  $error=errRel\left(\rho_{i+1}^{(1)},\rho_{i+1}^{(0)}\right)$\; \label{linea:main_int_err}
+  $k=2$\;
+  \While{$error>\epsilon$}{
+    $\rho_{i+1}^{(k)}=\rho_i+\frac{h}{2}\left\{f\left(t_i,\rho_i+f(t_{i+1},\rho_{i+1}^{(k-1)})\right)\right\}$\;
+    $error=errRel\left(\rho_{i+1}^{(k)},\rho_{i+1}^{(k-1)}\right)$\;
+    $k=k+1$\;
+  }
+  $\rho_{i+1}=\rho_{i+1}^{(k)}$\;
+}
+}
+\end{algorithm}
+
+\quad El m\'etodo escogido para la resoluci\'on de nuestro problema, se encuentra dentro de un tipo general de m\'etodos num\'ericos tales que, para resolver la tarea dada, calculan la derivada de una funci\'on de manera expl\'icita (que corresponde a evaluar $f$ en nuestro caso). Esta caracter\'istica ser\'a la de mayor coste computacional en nuestro trabajo y la gran mayor\'ia de las estrategias que sean estudiadas ser\'an desarrolladas en torno a aquella caracter\'istica. Por ende, del Algoritmo \ref{algo:main_int}, describiremos el algoritmo para las subrutinas $Calculos(\rho_i)$, $error$ (error relativo) y $f$ en los Algoritmos \ref{algo:main_int_calculos}, \ref{algo:main_int_err} y \ref{algo:main_int_f} respectivamente\footnote{Recordar que estamos considerando $\hbar=1$}.
+
+\begin{algorithm}
+ \caption{Integraci\'on y registro: $Calculos(\rho)$}\label{algo:main_int_calculos}
+\LinesNumbered
+\KwIn{$\rho$}
+\KwOut{$\{\eta_i\}_{i=1}^{\dimAt}$}
+\Begin{\For{$i=0$ hasta $\dimAt-1$}{
+  $\eta_{i+1}=tr\left( \ket{i}\bra{i}\rho \right) $\;
+  }
+  \For{$i=1$ hasta $\nmod$}{
+  $\eta_{i+\dimAt}=tr\left(a^\dag_i a_i\rho\right)$\;
+  }
+}
+\end{algorithm}
+
+\begin{algorithm}
+ \caption{Integraci\'on y registro: $errRel$}\label{algo:main_int_err}
+\LinesNumbered
+\KwIn{$\rho,\;\rho'$}
+\KwOut{$error$}
+\Begin{$error=\frac{\Vert\rho-\rho'\Vert}{\Vert\rho\Vert}$\;\label{algo:main_int_err:linea:error}
+}
+\end{algorithm}
+
+\begin{algorithm}
+ \caption{Integraci\'on y registro: $f$}\label{algo:main_int_f}
+\LinesNumbered
+\KwIn{$t,\;\rho$}
+\KwOut{$z=f(t,\rho)$}
+\Begin{$h=H(t)$\;
+$c=-i\left[h,\rho\right]$\;
+$l=limbladiano(\rho)$\;
+$z=c+l$\;
+}
+\end{algorithm}
+
+\quad Estos algoritmos, que han sido escritos superficialmente, nos servir\'an de base en la siguiente secci\'on para el an\'alisis de las estrategias a seguir para una mayor eficiencia del programa Main.
+\subsection{Estrategias de c\'omputo} %cálculo en paralelo de calcs(rho) al final, etc.
+\quad Deseamos identificar, los algoritmos que m\'as trabajo computacional pueden significar, sin embargo, antes de realizar estudios al respecto, debemos tener cierta seguridad, de haber escrito algoritmos que ya poseen eficiencia de manera independiente para cada subproblema presente. Tras haber hecho esto, podemos trabajar en el subproblema que mayor costo tenga, luego el siguiente, etc.\\
+
+\quad En vista de lo anterior, analizaremos primero los algoritmos generales escritos en la secci\'on anterior. Recordemos que en aquella secci\'on, se\~nalamos que es a partir del Algoritmo \ref{algo:main_int} que debemos concentrar nuestra atenci\'on.
+
+\begin{description}
+
+ \item[\emph{Algoritmo \ref{algo:main_int}} :] Una caracter\'istica importante que salta a la vista, tras compararlo con el Algoritmo \ref{algo:heun}, algoritmo desde el cual el primero fue derivado. En el segundo, donde se describe la integraci\'on a realizar en forma general, la salida del programa es $\{Y_i\}_{i=0}^{n-1}$, que en el contexto de nuestro trabajo, es equivalente a escribir $\{\rho_i\}_{i=0}^{n-1}$. Sin embargo, en el Algoritmo \ref{algo:main_int} la salida es $\{Calculos(\rho_i)\}_{i=0}^{n-1}$, dado que no son, escencialmente las matrices $\rho_i$ las que nos interesan, si no las cantidades f\'isicas que son posibles de calcular seg\'un la ecuaci\'on (\ref{ec:traza_opRho}). Esto lleva a dos estrategias inmediatas de c\'omputo:
+
+\begin{enumerate}
+ \item Calcular en cada paso $k$ la matriz de densidad $\rho_{k+1}$, luego realizar y registrar $Calculos(\rho_{k+1})$, finalmente hacer $\rho_k=\rho_{k+1}$, perdiendo los datos de la matriz anterior y yendo al siguiente paso. De esta forma, no es necesario almacenar todas las matrices de densidad, ahorrando cinco \'ordenes en cantidad de memoria, puesto que el n\'umero de iteraciones a realizar es $2E5$.
+\item Calcular en cada paso $k$ la matriz de densidad $\rho_{k+1}$ en una nueva variable. Tras finalizar la integraci\'on. Realizar en paralelo cada $Calculo(\rho_k)$, de esta forma aprovechamos todo el potencial del n\'umero de hilos de procesamiento que se tengan a disposici\'on, pero a costo de un gran uso en la memoria disponible. 
+\end{enumerate}
+
+\item[\emph{Algoritmos \ref{algo:main_int_calculos} y \ref{algo:main_int_f}} :] Lo importante a destacar en esto casos, es que \'estos hacen uso de los operadores descritos en la secci\'on (\ref{sec:operadores_involucrados}). La forma de \'estos operadores, y el m\'etodo a utilizar para calcular expresiones en los que \'estos se encuentren involucrados, tedr\'a gran relevancia en vistas de lograr algoritmos eficiente. Estudiaremos esto en la secci\'on (\ref{sec:cal_operadores_involucrados}).
+
+\item[\emph{Algoritmo \ref{algo:main_int_err}} :] Se destaca que la norma utilizada es la de Frobenius, pero m\'as a\'un, los operadores involucrados en este c\'alculo son siempre hermitianos (diferencia de dos matrices de densidad, hermitianas). Ahora bien, sea $\rho$ la matriz de coeficientes $\rho_{ij}\in \mathbb{C},\,i,j=1\ldots n$ que representa (en la base can\'onica) al operador $\hat{\rho}:\,\mathbb{C}^n\rightarrow \mathbb{C}^n$ hermitiano arbitrario. La norma de Frobenius de este operador (al cuadrado) se calcula seg\'un:
+\begin{eqnarray}
+ \Vert \hat{\rho} \Vert_F^2 &\equiv& tr\left( \rho^\dag\rho \right)\label{ec:frob_inicial}\\
+&=&tr\left( \rho^2 \right)\\
+&=& tr\left( \sum_{k=1}^n\rho_{ik}\rho_{kj} \right)\\
+&=&\sum_{i,j=1}^n\left\{ \delta_{ij} \sum_{k=1}^n\rho_{ik}\rho_{kj} \right\} \\
+&=&\sum_{i,j=1}^n\rho_{ij}\rho_{ji}\\
+&=&\sum_{i,j=1}^n \vert \rho_{ij} \vert^2.\label{ec:frob_final}
+\end{eqnarray}
+\quad Esta propiedad reduce el n\'umero de operaciones necesarias\footnote{\label{pie:numero_peraciones}Por \emph{n\'umero de operaciones} entenderemos el n\'umero de multiplicaciones m\'as el n\'umero de sumas.} para el c\'alculo de la norma de $\mathcal{O}(n^3)$ a $\mathcal{O}(n^2)$.
+\end{description}
+
+\subsection{C\'omputo eficiente de operadores involucrados}\label{sec:cal_operadores_involucrados}
+
+\quad De la ecuaci\'on (\ref{limbladiano}), (\ref{ec:H0}) y (\ref{ec:HI}), vemos que los operadores mencionados en la secci\'on (\ref{sec:operadores_involucrados}), son de gran importancia en los c\'omputos de la funci\'on $f$ a integrar. A continuaci\'on estudiaremos la estructura de \'estos operadores con el fin de reducir el n\'umero de operaciones necesarias para el c\'omputo del Hamiltoniano y el Limbladiano. Comenzaremos\footnote{Las variables utilizadas en \'estos estudios han sido descritas en la secci\'on (\ref{sec:variables_involucradas}).} esto estudiando el operador $\hat{a}$ definido en (\ref{ec:operador_creacion_a}). Antes, recordemos que si $C=A\otimes B$ es el producto tensorial de dos matrices $A\in\mathcal{M}_{n\times m}(\mathbb{C})$, $B\in\mathcal{M}_{l\times k}(\mathbb{C})$, entonces los coeficientes $c_{ij}$ de $C$ pueden ser calculados seg\'un:\begin{equation}\label{ec:kron}
+ \begin{array}{lll}
+  c_{ij}=a_{i_1j_1}\cdot b_{i_2j_2}, & i=1\ldots n\cdot l,j=1\ldots m\cdot k\\
+i_1=\left\lceil \frac{i}{l}\right\rceil, & j_1=\left\lceil \frac{j}{k}\right\rceil\\
+i_2=(i-1)\bmod l+1, & j_2=(j-1)\bmod k+1,
+ \end{array}
+\end{equation}
+sin embargo, tras una breve inspecci\'on, nos damos cuenta que \'este producto tiene la \'util representaci\'on:
+\clearpage\begin{equation}\label{ec:kron_esquema}C=\left(
+\begin{array}{c:c:c:c}
+a_{11}B & a_{12}B & \cdots & a_{1m}B \\ \hdashline
+a_{21}B & a_{22}B & \vdots & a_{2m}B \\ \hdashline
+\vdots & \vdots & \ddots & \vdots \\ \hdashline
+a_{n1}B & a_{n2}B & \cdots & a_{nm}B
+\end{array}\right).
+\end{equation}
+\subsubsection{Operador $\hat{a}$, de creaci\'on del modo $a$.}
+\quad El operador de creaci\'on del modo $a$ que act\'ua de $\mathcal{H}_a\rightarrow\mathcal{H}_a$, es representado en la base can\'onica por la matriz de coeficientes $a_{ij},\,i,j=1\ldots \dimA$ seg\'un:\begin{equation}\label{ec:coef_creacion_a}
+a_{ij}=\left\{
+\begin{array}{cl}
+ \sqrt{i} & ,j=i+1,i=1 \ldots (\dimA -1)\\
+0, & , i>\dimA-1
+\end{array}
+\right..
+\end{equation}
+\quad Ahora bien, recordemos se define un operador $\hat{a}$, que act\'ua de $\mathcal{H}\rightarrow \mathcal{H}$ seg\'un lo visto en (\ref{sec:operadores_involucrados}). Para estudiar su estructura, utilizamos (\ref{ec:kron_esquema}) siendo en este caso $A$ una matriz identidad de orden $n=\dimAt$ y $B$ la matriz representante del operador de creaci\'on del modo $a$. As\'i, es inmediato que:\begin{equation}\label{ec:IkronA}
+ I^n \otimes B=
+\left(\begin{array}{cccc}
+B & \mathbb{O}& \cdots &\mathbb{O}\\
+\mathbb{O} & B &\ddots &\vdots\\
+\vdots & \ddots & \ddots & \mathbb{O}\\
+\mathbb{O} &\cdots &\mathbb{O} & B
+\end{array}\right).
+\end{equation}
+\quad Donde $\mathbb{O}$ son matrices nulas del mismo tama\~no que $B$, siendo el n\'umero de bloques de la diagonal igual a $\dimAt$.\\
+
+\quad Ahora, utilizando nuevamente (\ref{ec:kron_esquema}), siendo esta vez $B$ la matriz identidad, de orden $n$, y $A$ una matriz cuadrada cualquiera de orden $m$, se tiene que:\begin{equation}\label{ec:AkronI}
+ A \otimes I^n=
+\left(\begin{array}{ccc:ccc:ccc:ccc}
+a_{11}& & & a_{12} & & &  & & &a_{1m}& &  \\ 
+&\ddots& & & \ddots & &  & \cdots & &&\ddots &  \\ 
+& &a_{11} & & & a_{12} &  & & & & & a_{1m} \\ \hdashline
+
+a_{21}& & & a_{22} & & &  & & &a_{2m}& &  \\ 
+&\ddots& & & \ddots & &  & \cdots & &&\ddots &  \\ 
+& &a_{21} & & & a_{22} &  & & & & & a_{2m} \\ \hdashline
+
+& & & & & & & & & & &  \\ 
+&\vdots& & & \vdots & &  & \vdots & &&\vdots &  \\ 
+& & & & & & & & & & & \\ \hdashline
+
+a_{m1}& & & a_{m2} & & &  & & &a_{mm}& &  \\ 
+&\ddots& & & \ddots & &  & \cdots & &&\ddots &  \\ 
+& &a_{m1} & & & a_{m2} &  & & & & & a_{mm}
+\end{array}\right).
+\end{equation}
+\quad Donde cada bloque es una matriz diagonal de orden $n$. Es claro que el n\'umero de bloques es $m^2$. Aplicando primero (\ref{ec:IkronA}) con la identidad de orden $n=\dimAt$ y $A$ el operador de creaci\'on del modo $a$, y luego aplicando a este resultado la ecuaci\'on (\ref{ec:AkronI}) con $A=I\otimes \hat{a}$ y la identidad de orden $\dimA$, se tiene que el operador definido en (\ref{ec:operador_creacion_a}) puede ser representado, seg\'un sus coeficientes, como\footnote{la sigla ``c.o.c.'' significa \emph{cualquier otro caso}.}:\begin{equation}\label{ec:coef_operador_creacion_generalizado}
+(I^n\otimes \hat{a} \otimes I^l)_{i,j}=\left\{
+\begin{array}{cl}
+ \sqrt{\lceil \frac{i}{l} \rceil \mod m} & ,j=i+l,i=1 \ldots (n\cdot m -1)\cdot l\\
+0 & ,\mbox{c.o.c.}
+\end{array}
+\right.,
+\end{equation}
+con $n\equiv\dimAt$, $m\equiv\dimA$ y $l\equiv\dimB$.
+\subsubsection{Operador de creaci\'on generalizado}\label{sec:operador_creacion_generalizado}
+\quad Siguiendo las mismas ideas de la secci\'on anterior, es sencillo encontrar la expresi\'on para el operador definido por:\begin{equation}
+ \hat{a}^{k,m}_g:=I^{n_1}\otimes I^{n_2} \otimes \ldots \otimes I^{n_{g-1}} \otimes \hat{a}^k \otimes I^{n_{g+1}}\otimes \ldots \otimes I^{n_m},
+\end{equation}
+con $k$ siendo la dimensi\'on del subespacio en el cual act\'ua el operador de creaci\'on $\hat{a}$. Entonces:\begin{equation}
+\left(\hat{a}^{k,m}_g\right)_{ij}=\left\{
+\begin{array}{cl}
+\sqrt{\lceil \frac{i}{\Pi_2} \rceil \mod k} & ,j=i+\Pi_2,i=1 \ldots (\Pi_1 -1)\cdot \Pi_2\\
+0 & , i>(\Pi_1 -1)\cdot \Pi_2
+\end{array}
+\right.,
+\end{equation}
+con $\Pi_2=\prod^{n_m}_{i=g+1}n_i,\,\,\Pi_1=k\cdot\prod^{g-1}_{i=1}n_i$. Donde esta vez el espacio de Hilbert considerado en el cual act\'ua este operador es de dimensi\'on $\Pi_1 \cdot \Pi_2$. Esta expresi\'on ser\'a importante en vistas de generar un algoritmo que pueda ser utilizado en modelos m\'as generales que el considerado en este trabajo.
+\subsubsection{Operador $\hat{a}_{ij}$, de transiciones at\'omicas}
+\quad Recordemos que el operador de transici\'on del nivel at\'omico $\ket{j}$ a $\ket{i}$ est\'a definido por la proyecci\'on:
+$$\ket{i}\bra{j},$$
+donde cada $\ket{i}$ es un vector perteneciente a la base can\'onica, como fue visto en (\ref{sec:modelo_matematico}). Luego, esta proyecci\'on puede ser representada seg\'un la composici\'on:
+$$e_i\cdot e_j^t,$$
+que corresponde a una matriz de cuadrada de orden $\dimAt$ tal que todos sus elementos son nulos salvo el ubicado en la $i$-\'esima fila y la $j$-\'esima columna. Es decir los coeficientes $a_{kl}$ de la matriz que representa al operador $\hat{a}_{ij}$ pueden ser descritos por:\begin{equation}
+ a_{kl}=\delta_{kj}\delta_{li},\qquad k,l=1\ldots \dimAt.\label{ec:coef_operador_transicion_Hat}
+\end{equation}
+\quad Ahora, repitiendo el an\'alisis de la secci\'on anterior para productos del tipo $A\otimes I^n$, esta vez con $A$ descrito seg\'un (\ref{ec:coef_operador_transicion_Hat}), se tendr\'a que la matriz representante de (\ref{ec:operador_transicion_H}) puede ser descrita por:\begin{equation}\hat{a}_{ij}\equiv \ket{i}\bra{j}\otimes I_a \otimes I_b=\label{ec:matriz_operador_transicion_H}
+\left(\begin{array}{c:c:c:c}
+\mathbb{O}^m_{11} & \mathbb{O}^m_{12} & \cdots & \mathbb{O}^m_{1n} \\ \hdashline
+\mathbb{O}^m_{21} & \mathbb{O}^m_{22} & \cdots & \mathbb{O}^m_{2n} \\ \hdashline
+\vdots & \vdots & I^m_{ji} & \vdots \\ \hdashline 
+\mathbb{O}^m_{n1} & \mathbb{O}^m_{n2} & \cdots & \mathbb{O}^m_{nn}
+\end{array}\right),
+\end{equation}
+con $m=\dimA\cdot \dimB$ y $n=\dimAt$. Es decir, \'estas matrices est\'an compuestas por $n^2$ bloques cuadrados de orden $m$, de los cuales todos son nulos salvo el bloque de la fila $j$, columna $i$ que corresponde a una matriz identidad de orden $m$. Luego, los coeficientes $a_{kl}:\,k,l=1\ldots n\cdot m=\dimT$ de esta matriz, pueden ser descritos por:\begin{equation}\label{ec:coef_operador_transicion_H}
+ c_{kl}=\left\{\begin{array}{ll}
+\delta_{kl}, & k=(j-1)\cdot n+1\ldots j\cdot n,\,l=(i-1)\cdot m+1\ldots i\cdot m \\
+0, & \mbox{c.o.c.}
+\end{array}\right..
+\end{equation}
+\subsubsection{Operador de transiciones at\'omicas generalizado}\label{sec:operador_transiciones_generalizado} \quad Deseamos ahora encontrar expresiones para los elementos no nulos de la matriz que represente al nuevo operador, definido por:\begin{equation}\label{ec:operador_transiciones_generalizado}
+ \hat{a}_{ij}:=\ket{i}\bra{j} \otimes I^{n_1}\otimes I^{n_2} \otimes \ldots \otimes I^{n_d}.
+\end{equation}
+\quad En este caso, el esquema de la matriz ser\'a semejante al dado por (\ref{ec:matriz_operador_transicion_H}), la diferencia radicar\'a en que el orden $m$ del esquema anterior, esta vez corresponder\'a al producto total de las dimensiones de los dem\'as subespacios no asociados al \'atomo en cuesti\'on (modos del campo electromagn\'etico, otros \'atomos, etc.), es decir, en este caso $m=\prod_{i=1}^{d}n_i$. Esta vez, los coeficientes de las matrices representantes est\'an dados por:\begin{equation}\label{ec:coef_operador_transicion_generalizado}
+ c_{kl}=\left\{\begin{array}{ll}
+\delta_{kl}, & k=(j-1)\cdot \Pi+1\ldots j\cdot \Pi,\,l=(i-1)\cdot \Pi+1\ldots i\cdot \Pi \\
+0, & \mbox{c.o.c.}
+\end{array}\right..
+\end{equation}
+con $k,l=1\ldots \Pi$ y $\Pi=\prod_{i=1}^dn_i$.
+\subsection{C\'omputo eficiente de operadores compuestos}\label{sec:computo_eficiente_operadores}
+\quad De las expresiones (\ref{ec:coef_operador_creacion_generalizado}) y (\ref{ec:coef_operador_transicion_generalizado}) podemos apreciar que \'estas matrices cumplen con la propiedad de ser matrices de baja \emph{densidad} (o \emph{sparse}), en el sentido que la proporci\'on de elementos no nulos, sobre el total de elementos, es baja. De hecho, siendo $\dimT$ la dimensi\'on del espacio mayor y por ende el orden de los operadores generalizados definidos en la secci\'on anterior, se tiene que para el caso del operador de craci\'on $\hat{a}$ definido en (\ref{sec:operador_creacion_generalizado}), entonces su densidad $\rho_{\hat{a}}$ cumple:
+$$\rho_{\hat{a}}=\mathcal{O}\left(\frac{1}{\dimT}\right),$$
+mientras que para el operador $\hat{a}_{ij}$ definido en (\ref{sec:operador_transiciones_generalizado}) su densidad cumple:
+$$\rho_{\hat{a}_{ij}}=\frac{1}{\dimAt\cdot\dimT}.$$
+
+\quad Por ejemplo, para el caso m\'as sencillo estudiado, en el cual $\dimT=45$, se tiene $\hat{a}$ tiene una densidad del 2.1\% y la densidad de $\hat{a}_{ij}$ es de 0.4\%.\\
+
+\quad La baja densidad de \'estos operadores y el poseer una estructura bien definida, nos permitir\'a escribir algoritmos que calculen expresiones algebraicas (en las que \'estos operadores participen) con mayor eficiencia, al no ser necesario realizar todas las operaciones que se realizar\'ian de no haber estructura y no poseer baja densidad. Esto lo analizamos con mayor profundidad a continuaci\'on, primero definiendo las siguientes variables de importancia, indicando al final entre par\'entesis los valores particulares para este trabajo.
+\begin{description}
+
+\item [$N$ :] \qquad N\'umero de espacios componentes del espacio mayor. ($N=3$).
+\item[$n_i$ :] \qquad $i=1\ldots N$. Dimensi\'on del i-\'esimo espacio. ($n_1=5$).
+\item[$\Pi_1^g$ :] \qquad Equivalente a $\prod_{i=1}^{g-1}n_i$ con $g=2\ldots N$.
+\item[$\Pi_2^g$ :] \qquad Equivalente a $\prod_{i=g+1}^{N}n_i$.
+\item[$T^g$ :] \qquad Equivalente a $(n_g-1)\Pi_2^g$.
+\item[$\Pi_3^g$ :] \qquad Equivalente a $T+\Pi_2$.
+\item[$\Pi$ :] \qquad  Equivalente a $\prod_{i=2}^N{n_i}$.
+\item[$ord$ :] \qquad Arreglo de enteros que especifica la dimensi\'on de cada subespacio.
+\end{description}
+\quad A continuaci\'on, describiremos esquemas de c\'omputo para diferentes expresiones de inter\'es. Donde $\rho$ ser\'a una matriz compleja de orden $\dimT$ con coeficientes $\rho_{ij},\,i,j=1\ldots \dimT$. En todos los casos a presentar se tiene que el n\'umero original de operaciones a realizar (esto es sin aprovechar las estructuras de los operadores) es $$\mathcal{O}(\dimT^3).$$ 
+\subsubsection{Expresiones tipo $\hat{\rho}\rightarrow \hat{a}\hat{\rho}$}\label{sec:arho}
+\quad Con $\hat{a}\equiv\hat{a}^{n_g,N}_g$, definido en (\ref{sec:operador_creacion_generalizado}). A continuaci\'on presentamos brevemente esquematizaciones de c\'omo operan estas expresiones sobre $\rho$, junto con el algoritmo a utilizar dado el esquema, esto lo haremos a partir de lo expuesto en (\ref{ec:operador_transiciones_generalizado}) y (\ref{ec:coef_operador_transicion_generalizado}).
+\subsubsection*{Expresiones $\hat{a}\hat{\rho}$ y $\hat{a}^{\dag}\hat{\rho}$: } \quad En el primer caso $\hat{a}\hat{\rho}$, $\rho$ es dividida en \emph{sub-matrices fila}, esquem\'aticamente:\begin{equation}\left(
+ \begin{array}{c}
+\vdots\\
+B_{1} \\\hdashline
+\vdots\\
+B_{2}\\\hdashline
+\multirow{2}{*}{\Huge$\vdots$}\\
+\\\hdashline
+\vdots\\
+B_{n}
+ \end{array}\right).\label{ec:esquema_rho_arho}
+\end{equation}
+\quad Donde los $n=\Pi_1$ bloques esta vez poseen $T^g$ filas y $\dimT$ columnas, es decir abarcan todos las columnas de $\rho$. Los puntos suspensivos justo debajo de los bloques indican elementos que no ser\'an considerados y ser\'an nulos en el resultado, cuyo esquema es:\begin{equation}\left(
+ \begin{array}{c}
+\mathcal{B}_{1} \\
+\vdots\\\hdashline
+\mathcal{B}_{2}\\
+\vdots\\\hdashline
+\multirow{2}{*}{\Huge$\vdots$}\\
+\\\hdashline
+\mathcal{B}_{n}\\
+\vdots
+ \end{array}\right).
+\end{equation}
+ \quad Es decir, se realiza un movimiento hacia arriba de los bloques seleccionados. Adem\'as si $M=\mathcal{B}_{i}$ y $S=B_{i}$ entonces las relaciones entre sus coeficientes son:\begin{equation}
+M_{kl}=\gamma_{k}S_{kl},\,\qquad k=1\ldots T^g,\,l=1\ldots \dimT, \label{ec:bloque_arM}
+\end{equation}
+con\begin{equation}
+%bii = alpha*sqrt(real(mod(ceiling(RDIV(ei,pi2)),k)))
+ \gamma_{k}=\sqrt{\left\lceil \frac{k}{\Pi_2^g} \right\rceil\bmod n_g}.\label{ec:coef_gammas_arMod}
+\end{equation}
+\quad Escribimos a continuaci\'on el algoritmo que realiza el c\'omputo de esta expresi\'on:
+
+\begin{algorithm}[H]
+\caption{arMod}\label{algo:arMod}
+\LinesNumbered
+\KwIn{$\rho$,\, $id$: Matriz densidad, n\textdegree{} subespacio asociado al modo.}
+\KwOut{$r=\hat{a}\rho$}
+\Begin{
+      $k=ord[id]$\;
+      $pi1= producto(ord[1:id-1])$\;
+      $pi2= producto(ord[id+1:\dimT])$\;
+      $T=(k-1)*pi2$\;
+      $pi3=T+pi2$\;
+      $r=ceros(\dimT)$\;
+      
+      \For{$bi=0$ hasta $(pi1-1)\cdot pi3$; $bi+=pi3$}{
+    \For{$ei=1$ hasta $T$}{
+      \For{$ej=1$ hasta $\dimT$}{
+	$\gamma=\sqrt{\left\lceil\frac{ei}{pi2}\right\rceil\bmod k }$\;
+	$r[bi+ei,\,ej]=\gamma\cdot\rho[pi2+bi+ei,ej]$\;
+      }
+     }
+  }
+}
+\end{algorithm}
+\quad El n\'umero de operaciones realizado por el algoritmo es $$\mathcal{O}\left(\dimT^2\left(\frac{n_g-1}{n_g}\right)\right)=\mathcal{O}\left(\dimT^2\right).$$ El caso $\hat{a}^{\dag}{\rho}$ es an\'alogo al anterior, salvo que esta vez el movimiento de los bloques es hacia abajo.
+\subsubsection*{Expresiones $\hat{\rho}\hat{a}$ y $\hat{\rho}\hat{a}^{\dag}$: } \quad En este caso, $\rho$ es dividida en \emph{sub-matrices columna}, esquem\'aticamente:\begin{equation}\rho=\left(
+\begin{array}{cc:cc:cc:cc}
+ B_1&\cdots & B_2 & \cdots& \multicolumn{2}{:c:}{\mbox{\Huge$\cdots$}} &B_n&\cdots
+\end{array}\right),\label{ec:esquema_rhoa}
+\end{equation}
+donde los $B_i$ son sub-matrices de $\dimT$ filas y $T^g$ columnas, $n=\Pi_1$, y los puntos suspensivos a la derecha de cada bloque denotan columnas que no son consideradas. As\'i el resultado se puede describir por:\begin{equation}\left(
+\begin{array}{cc:cc:cc:cc}
+ \cdots&\mathcal{B}_1 & \cdots & \mathcal{B}_2& \multicolumn{2}{:c:}{\mbox{\Huge$\cdots$}} &\cdots&\mathcal{B}_n
+\end{array}\right),
+\end{equation}
+\quad Es decir, se mueven los bloques hacia la derecha. Adem\'as si $M=\mathcal{B}_{i}$ y $S=B_{i}$ entonces las relaciones entre sus coeficientes son:\begin{equation}
+M_{kl}=\gamma_{l}S_{kl},\,\qquad k=1\ldots \dimT,\,l=1\ldots T^g, \label{ec:bloque_raM}
+\end{equation}
+con\begin{equation}
+ \gamma_{l}=\sqrt{\left\lceil \frac{l}{\Pi_2^g} \right\rceil\bmod n_g}.\label{ec:coef_gammas_raMod}
+\end{equation}
+\quad Escribimos a continuaci\'on el algoritmo que realiza el c\'omputo de esta expresi\'on:
+
+\begin{algorithm}[H]
+\caption{raMod}\label{algo:raMod}
+\LinesNumbered
+\KwIn{$\rho$, $id$: Matriz densidad, n\textdegree{} subespacio asociado al modo.}
+\KwOut{$r=\rho\hat{a}$}
+\Begin{
+      $k=ord[id]$\;
+      $pi1= producto(ord[1:id-1])$\;
+      $pi2= producto(ord[id+1:\dimT])$\;
+      $T=(k-1)*pi2$\;
+      $pi3=T+pi2$\;
+      $r=ceros(\dimT)$\;
+      
+      \For{$bj=0$ hasta $(pi1-1)\cdot pi3$; $bi+=pi3$}{
+    \For{$ei=1$ hasta $\dimT$}{
+      \For{$ej=1$ hasta $T$}{
+	$\gamma=\sqrt{\left\lceil\frac{ej}{pi2}\right\rceil\bmod k }$\;
+	$r[ei,\,pi2+bj+ej]=\gamma\cdot\rho[ei,bj+ej]$\;
+      }
+     }
+  }
+}
+\end{algorithm}
+\quad El n\'umero de operaciones realizado por el algoritmo es $$\mathcal{O}\left(\dimT^2\left(\frac{n_g-1}{n_g}\right)\right)=\mathcal{O}\left(\dimT^2\right).$$ El caso ${\rho}\hat{a}^{\dag}$ es an\'alogo al anterior, salvo que esta vez el movimiento de los bloques es hacia la izquierda. 
+\subsubsection{Expresiones tipo $\hat{\rho}\rightarrow \hat{a}_{ij}\hat{\rho}$}\label{sec:aijrho} \quad Con $\hat{a}_{ij}$ definido en (\ref{sec:operador_transiciones_generalizado}). Esta vez, a partir de (\ref{ec:coef_operador_creacion_generalizado}) podemos deducir esquemas simples que caracterizen la acci\'on del operador de transiciones generalizado en las distintas expresiones consideradas en el Limbladiano.
+\subsubsection*{Expresi\'on $\hat{a}_{ij}\hat{\rho}$: }\quad  Esta vez, $\rho$ ser\'a dividida en $\dimAt$ bloques fila, de $\Pi$ filas y $\dimT$ columnas, es decir:\begin{equation}
+ \rho=\left(\begin{array}{c}              
+B_1\\
+B_2\\
+\vdots\\
+B_{\Pi}
+\end{array}\right).\label{ec:esquema_aijrho}
+\end{equation}
+Y resultado es esquematizado por:
+$$\mbox{$i$-\'esimo}\{\left(
+\begin{array}{c}
+ \cdots\\
+B_j\\
+\cdots
+\end{array}
+\right).
+$$
+Por ejemplo si $\dimA=3$ y escribimos:
+$$\rho=\left(\begin{array}{ccc}              
+B_1\\
+B_2\\
+B_3
+\end{array}\right),
+$$
+entonces:
+$$\hat{a}_{13}\rho=\left(\begin{array}{ccc}              
+B_{3}\\
+\mathbb{O}^\Pi\\
+\mathbb{O}^\Pi
+             \end{array}\right).
+$$
+\quad Escribimos a continuaci\'on el algoritmo que realiza el c\'omputo de esta expresi\'on:
+
+\begin{algorithm}[H]
+\caption{arAt}\label{algo:arAt}
+\LinesNumbered
+\KwIn{$\rho$, $i$, $j$.}
+\KwOut{$r=\hat{a}_{ij}\rho\hat{a}_{ij}^\dag$}
+\Begin{
+      $pi = producto(ord[2:\dimT])$\;
+      $i1 = i\cdot pi$\;
+      $j1 = j\cdot pi$\;
+      $r=ceros(pi)$\;
+     \For{$ei=1$ hasta $pi$}{
+     \For{$ej=1$ hasta $\dimT$}{
+      $r[i1+ei,ej]=rho[j1+ei,j1+ej]$\;
+      }
+  }
+}
+\end{algorithm}
+\quad El n\'umero de \emph{asignaciones} realizado por el algoritmo es $$\frac{\dimT^2}{\dimAt}=\mathcal{O}(\dimT^2).$$ El caso $\hat{a}_{ij}^{\dag}\hat{\rho}$ es igual al anterior, pero intercambiando $i$ po $j$, esto es inmediato dado que $\left(\ket{i}\bra{j}\right)^{\dag}=\ket{j}\bra{i}$.
+\subsubsection*{Expresi\'on $\hat{\rho}\hat{a}_{ij}$: } Esta vez la esquematizaci\'on de la forma de escoger los elementos de $\rho$ viene dada por los $\dimAt$ bloques columna de $\dimT$ filas y $\Pi$ columnas:\begin{equation}
+\rho=\left(\begin{array}{cccc}              
+B_{1}&B_2&\cdots&B_{\Pi}
+             \end{array}\right).\label{ec:esquema_rhoaij}
+\end{equation}
+Y resultado es esquematizado por:
+$$\overset{ \overbrace{}^{\mbox{$j$-\'esimo}}}{\left(\begin{array}{ccc}
+\cdots&B_{i}&\cdots
+        \end{array}\right)}.
+$$
+Por ejemplo si $\dimA=3$ y escribimos:
+$$\rho=\left(\begin{array}{ccc}              
+B_{1}&B_2&B_3
+             \end{array}\right),
+$$
+entonces:
+$$\rho\hat{a}_{13}=\left(\begin{array}{ccc}              
+\mathbb{O}^\Pi&\mathbb{O}^\Pi&B_{1}
+             \end{array}\right).
+$$
+\quad Escribimos a continuaci\'on el algoritmo que realiza el c\'omputo de esta expresi\'on:
+
+\begin{algorithm}[H]
+\caption{raAt}\label{algo:raAt}
+\LinesNumbered
+\KwIn{$\rho$, $i$, $j$.}
+\KwOut{$r=\hat{a}_{ij}\rho\hat{a}_{ij}^\dag$}
+\Begin{
+      $pi = producto(ord[2:\dimT])$\;
+      $i1 = i\cdot pi$\;
+      $j1 = j\cdot pi$\;
+      $r=ceros(pi)$\;
+     \For{$ei=1$ hasta $\dimT$}{
+     \For{$ej=1$ hasta $pi$}{
+      $r[ei,j1+ej]=rho[ei,i1+ej]$\;
+      }
+  }
+}
+\end{algorithm}
+\quad El n\'umero de \emph{asignaciones} realizado por el algoritmo es $$\frac{\dimT^2}{\dimAt}=\mathcal{O}(\dimT^2).$$ Tambi\'en, el caso $\hat{\rho}\hat{a}_{ij}^{\dag}$ equivalente al primero pero intercambiando $i$ por $j$.
+\subsubsection{Expresiones tipo $\hat{\rho}\rightarrow \hat{a}\hat{\rho}\hat{a}^{\dag}$}\label{sec:expre_modales_orden2}
+\quad Estos casos son una continuaci\'on de lo realizado en (\ref{sec:arho}).
+\subsubsection*{Expresi\'on $\hat{a}\hat{\rho}\hat{a}^{\dag}$: } \quad Seg\'un lo visto en (\ref{sec:arho}) esto es seleccionar los bloques fila y moverlos hacia arriba y del resultado escoger los bloques columna y moverlos hacia la izquierda. El efecto neto es eleccionar $(\Pi_1^g)^2$ bloques de $\rho$ seg\'un el esquema:\\\begin{equation}\rho=\left(
+ \begin{array}{cc:cc:cc:cc}
+\ddots&\vdots& \ddots&\vdots& \multicolumn{2}{:c:}{\multirow{2}{*}{$\mathbf{\cdots}$} } &\ddots &\vdots \\
+\cdots&B_{11}& \cdots & B_{12}& & &\cdots& B_{1n}\\\hdashline
+
+\ddots&\vdots& \ddots&\vdots& \multicolumn{2}{:c:}{\multirow{2}{*}{$\mathbf{\cdots}$} } & \ddots&\vdots \\
+\cdots&B_{21}& \cdots & B_{22}& & &\cdots& B_{2n}\\\hdashline
+\multicolumn{2}{c:}{\multirow{2}{*}{\Huge$\vdots$} } & \multicolumn{2}{:c:}{\multirow{2}{*}{\Huge$\vdots$} } & \multicolumn{2}{:c:}{\multirow{2}{*}{\Huge$\vdots$} }&\multicolumn{2}{:c}{\multirow{2}{*}{\Huge$\vdots$} }\\
+&&&&&&& \\\hdashline
+\ddots&\vdots& \ddots&\vdots& \multicolumn{2}{:c:}{\multirow{2}{*}{$\mathbf{\cdots}$} } & \ddots&\vdots \\
+\cdots&B_{n1}& \cdots & B_{n2}& & &\cdots& B_{nn}
+\end{array}\right),
+\end{equation}
+con $n=\Pi_1^g$. Los puntos suspensivos a los lados de los bloques $B_{ij}$ indican elementos de $\rho$ que no son seleccionados. De hecho la distancia (hacia arriba o hacia abajo) entre estos bloques es igual a $\Pi_2^g$. As\'i, el resultado de la expresi\'on $\hat{a}\hat{\rho}\hat{a}^{\dag}$ se describe seg\'un:\\\begin{equation}\left(
+ \begin{array}{cc:cc:cc:cc}
+\mathcal{B}_{11} & \cdots & \mathcal{B}_{12} & \cdots & \multicolumn{2}{:c:}{\multirow{2}{*}{$\cdots$} } & \mathcal{B}_{1n}&\cdots \\
+\vdots & \ddots & \vdots & \ddots & & & \vdots & \ddots \\\hdashline
+\mathcal{B}_{21} & \cdots & \mathcal{B}_{21} & \cdots & \multicolumn{2}{:c:}{\multirow{2}{*}{$\cdots$} } & \mathcal{B}_{2n}&\cdots \\
+\vdots & \ddots & \vdots & \ddots & & & \vdots & \ddots \\\hdashline
+\multicolumn{2}{c:}{\multirow{2}{*}{\Huge$\vdots$} } & \multicolumn{2}{:c:}{\multirow{2}{*}{\Huge$\vdots$} } & \multicolumn{2}{:c:}{\multirow{2}{*}{\Huge$\vdots$} }&\multicolumn{2}{:c}{\multirow{2}{*}{\Huge$\vdots$} }\\
+&&&&&&& \\\hdashline
+
+\mathcal{B}_{n1} & \cdots & \mathcal{B}_{n2} & \cdots & \multicolumn{2}{:c:}{\multirow{2}{*}{$\cdots$} } & \mathcal{B}_{nn}&\cdots \\
+\vdots & \ddots & \vdots & \ddots & & & \vdots & \ddots
+\end{array}\right),
+\end{equation}
+donde los puntos suspensivos a los lados de cada bloque indican elementos nulos, adem\'as cada bloque $M=\mathcal{B}_{ij}$ corresponde al bloque $S=B_{ij}$ transformado seg\'un las relaciones de sus coeficientes:
+$$M_{kl}=\gamma_{kl}S_{kl},\,\qquad k,l=1\ldots T^g,$$
+con:\begin{equation}
+ \gamma_{kl}=\sqrt{ \left(\left\lceil \frac{k}{\Pi_2^g} \right\rceil\bmod n_g\right)\left(\left\lceil \frac{l}{\Pi_2^g} \right\rceil\bmod n_g \right) }.\label{ec:coef_gammas}
+\end{equation}
+\quad El efecto entonces de esta transformaci\'on es mover ciertos bloques de $\rho$ hacia arriba y la izquierda, mutiplic\'andolos por los $\gamma_{kl}$ y anulando todos los dem\'as elementos no considerados. Podemos ahora escribir el algoritmo que realice los respectivos c\'omputos de esta expresi\'on:
+
+\begin{algorithm}[H]
+\caption{aratMod}\label{algo:aratMod}
+\LinesNumbered
+\KwIn{$\rho$, $id$: Matriz densidad, n\textdegree{} subespacio asociado al modo.}
+\KwOut{$r=\hat{a}\rho\hat{a}^\dag$}
+\Begin{
+      $k=ord[id]$\;
+      $pi1= producto(ord[1:id-1])$\;
+      $pi2= producto(ord[id+1:\dimT])$\;
+      $T=(k-1)*pi2$\;
+      $pi3=T+pi2$\;
+      $r=ceros(\dimT)$\;
+      
+      \For{$\{bi,\,bj\}=0$ hasta $(pi1-1)\cdot pi3$; $\{bi,\,bj\}+=pi3$\label{algo:aratMod_bucle0}}{
+    \For{$\{ei,\,ej\}=1$ hasta $T$}{
+     $\gamma=\sqrt{ \left(\left\lceil\frac{ei}{pi2}\right\rceil\bmod k\right)\left(\left\lceil\frac{ej}{pi2}\right\rceil\bmod k \right) }$\;
+     $r[bi+ei,\,bi+ej]=\gamma\cdot\rho[pi2+bi+ej,\,pi2+bj+ej]$\;
+     }
+  }
+}
+\end{algorithm}
+\quad As\'i, el n\'umero de operaciones baja ahora a: $$\mathcal{O}\left(\dimT^2\left(\frac{n_g-1}{n_g}\right)^2\right)=\mathcal{O}\left(\dimT^2\right).$$
+\subsubsection*{Expresi\'on $\hat{a}^{\dag}\hat{\rho}\hat{a}$: } Esta expresi\'on tiene las mismas caracter\'isticas que la anterior, con la salvedad que esta vez los bloques son definidos desde arriba a la izquierda y desplazados hacia abajo a la derecha. Esquem\'aticamente la selecci\'on es:\begin{equation}\rho=\left(
+ \begin{array}{cc:cc:cc:cc}
+B_{11} & \cdots & B_{12} & \cdots & \multicolumn{2}{:c:}{\multirow{2}{*}{$\cdots$} } & B_{1n}&\cdots \\
+\vdots & \ddots & \vdots & \ddots & & & \vdots & \ddots \\\hdashline
+B_{21} & \cdots & B_{21} & \cdots & \multicolumn{2}{:c:}{\multirow{2}{*}{$\cdots$} } & B_{2n}&\cdots \\
+\vdots & \ddots & \vdots & \ddots & & & \vdots & \ddots \\\hdashline
+\multicolumn{2}{c:}{\multirow{2}{*}{\Huge$\vdots$} } & \multicolumn{2}{:c:}{\multirow{2}{*}{\Huge$\vdots$} } & \multicolumn{2}{:c:}{\multirow{2}{*}{\Huge$\vdots$} }&\multicolumn{2}{:c}{\multirow{2}{*}{\Huge$\vdots$} }\\
+&&&&&&& \\\hdashline
+
+B_{n1} & \cdots & B_{n2} & \cdots & \multicolumn{2}{:c:}{\multirow{2}{*}{$\cdots$} } & B_{nn}&\cdots \\
+\vdots & \ddots & \vdots & \ddots & & & \vdots & \ddots
+\end{array}\right),
+\end{equation}
+mientras que el resultado de la expresi\'on es:\begin{equation}\left(
+ \begin{array}{cc:cc:cc:cc}
+\ddots&\vdots& \ddots&\vdots& \multicolumn{2}{:c:}{\multirow{2}{*}{$\mathbf{\cdots}$} } &\ddots &\vdots \\
+\cdots&\mathcal{B}_{11}& \cdots & \mathcal{B}_{12}& & &\cdots& \mathcal{B}_{1n}\\\hdashline
+
+\ddots&\vdots& \ddots&\vdots& \multicolumn{2}{:c:}{\multirow{2}{*}{$\mathbf{\cdots}$} } & \ddots&\vdots \\
+\cdots&\mathcal{B}_{21}& \cdots & \mathcal{B}_{22}& & &\cdots& \mathcal{B}_{2n}\\\hdashline
+\multicolumn{2}{c:}{\multirow{2}{*}{\Huge$\vdots$} } & \multicolumn{2}{:c:}{\multirow{2}{*}{\Huge$\vdots$} } & \multicolumn{2}{:c:}{\multirow{2}{*}{\Huge$\vdots$} }&\multicolumn{2}{:c}{\multirow{2}{*}{\Huge$\vdots$} }\\
+&&&&&&& \\\hdashline
+\ddots&\vdots& \ddots&\vdots& \multicolumn{2}{:c:}{\multirow{2}{*}{$\mathbf{\cdots}$} } & \ddots&\vdots \\
+\cdots&\mathcal{B}_{n1}& \cdots & \mathcal{B}_{n2}& & &\cdots& \mathcal{B}_{nn}
+\end{array}\right).
+\end{equation}
+\quad Siendo la relaci\'on entre los bloques $B_{ij}$ y $\mathcal{B}_{ij}$ la misma que la definida en la secci\'on anterior. El algoritmo de c\'omputo es entonces:
+
+\begin{algorithm}[H]
+\caption{atraMod}\label{algo:atraMod}
+\LinesNumbered
+\KwIn{$\rho$, $id$: Matriz densidad, n\textdegree{} subespacio asociado al modo.}
+\KwOut{$r=\hat{a}^\dag\rho\hat{a}$}
+\Begin{
+      $k=ord[id]$\;
+      $pi1= producto(ord[1:id-1])$\;
+      $pi2= producto(ord[id+1:\dimT])$\;
+      $T=(k-1)*pi2$\;
+      $pi3=T+pi2$\;
+      $r=ceros(\dimT)$\;
+      
+      \For{$\{bi,\,bj\}=0$ hasta $(pi1-1)\cdot pi3$; $\{bi,\,bj\}+=pi3$}{
+    \For{$\{ei,\,ej\}=1$ hasta $T$}{
+     $\gamma=\sqrt{ \left(\left\lceil\frac{ei}{pi2}\right\rceil\bmod k\right)\left(\left\lceil\frac{ej}{pi2}\right\rceil\bmod k \right) }$\;
+     $r[pi2+bi+ei,\,pi2+bi+ej]=\gamma\cdot\rho[bi+ej,\,bj+ej]$\;
+     }
+  }
+}
+\end{algorithm}
+\quad Siendo, tambi\'en en este caso, el n\'umero de operaciones igual a: $$\mathcal{O}\left(\dimT^2\left(\frac{n_g-1}{n_g}\right)^2\right)=\mathcal{O}\left(\dimT^2\right).$$
+\subsubsection*{Expresi\'on $\hat{a}^{\dag}\hat{a}\hat{\rho}$: }En este caso, la definici\'on de los bloques la misma que la utilizada en la secci\'on (\ref{sec:arho}). Y podemos observar de aquella secci\'on que esta vez no habr\'a movimiento de los bloques, la \'unica diferencia estar\'a entonces en los coeficientes que definen la transformaci\'on de los bloques. As\'i el esquema para $\rho$ es el mismo que (\ref{ec:esquema_rho_arho}), pero el resultado es:\begin{equation}\left(
+ \begin{array}{c}
+\vdots\\
+\mathcal{B}_{1} \\\hdashline
+\vdots\\
+\mathcal{B}_{2}\\\hdashline
+\multirow{2}{*}{\Huge$\vdots$}\\
+\\\hdashline
+\vdots\\
+\mathcal{B}_{n}
+ \end{array}\right).
+\end{equation}
+Definiendo nuevamente $M=\mathcal{B}_{i}$ y $S=B_{i}$, entonces las nuevas relaciones entre sus coeficientes son:\begin{equation}
+M_{kl}=\gamma_{k}S_{kl},\,\qquad k=1\ldots T^g,\,l=1\ldots \dimT, \label{ec:subbloque_atarM}
+\end{equation}
+y:\begin{equation}
+ \gamma_{k}=\left\lceil \frac{k}{\Pi_2^g} \right\rceil\bmod n_g.\label{ec:coef_gammas_atarMod}
+\end{equation}
+\quad Esta vez, el algoritmo para el c\'omputo de la expresi\'on es:
+
+\begin{algorithm}[H]
+\caption{atarMod}\label{algo:atarMod}
+\LinesNumbered
+\KwIn{$\rho$, $id$: Matriz densidad, n\textdegree{} subespacio asociado al modo.}
+\KwOut{$r=\hat{a}^\dag\hat{a}\rho$}
+\Begin{
+      $k=ord[id]$\;
+      $pi1= producto(ord[1:id-1])$\;
+      $pi2= producto(ord[id+1:\dimT])$\;
+      $T=(k-1)*pi2$\;
+      $pi3=T+pi2$\;
+      $r=ceros(\dimT)$\;
+      
+      \For{$bi=0$ hasta $(pi1-1)\cdot pi3$; $bi+=pi3$}{
+    \For{$ei=1$ hasta $T$}{
+      \For{$ej=1$ hasta $\dimT$}{
+	$\gamma=\left\lceil\frac{ei}{pi2}\right\rceil\bmod k$\;
+	$r[pi2+bi+ei,\,ej]=\gamma\cdot\rho[pi2+bi+ei,\,ej]$\;
+      }
+     }
+  }
+}
+\end{algorithm}
+\quad Siendo ahora el n\'umero de operaciones: $$\mathcal{O}\left(\dimT^2\left(\frac{n_g-1}{n_g}\right)\right)=\mathcal{O}\left(\dimT^2\right).$$
+\subsubsection*{Expresi\'on $\hat{\rho}\hat{a}^{\dag}\hat{a}$: } En este caso, los bloques se definen como \emph{sub-matrices columna}, desde el lado derecho de $\rho$. Esquem\'aticamente la selecci\'on desde los elementos de $\rho$ es:\begin{equation}\rho=\left(
+\begin{array}{cc:cc:cc:cc}
+ \cdots&B_1 & \cdots & B_2& \multicolumn{2}{:c:}{\mbox{\Huge$\cdots$}} &\cdots&B_n
+\end{array}\right),
+\end{equation}
+donde los $B_i$ son sub-matrices de $\dimT$ filas y $T$ columnas, $n=\Pi_1$, y los puntos suspensivos a la derecha de cada bloque denotan columnas que no son consideradas. As\'i el resultado se puede describir por:\begin{equation}\left(
+\begin{array}{cc:cc:cc:cc}
+ \cdots&\mathcal{B}_1 & \cdots & \mathcal{B}_2& \multicolumn{2}{:c:}{\mbox{\Huge$\cdots$}} &\cdots&\mathcal{B}_n
+\end{array}\right),
+\end{equation}
+\quad Adem\'as si $M=\mathcal{B}_{i}$ y $S=B_{i}$ entonces las relaciones entre sus coeficientes son:\begin{equation}
+M_{kl}=\gamma_{l}S_{kl},\,\qquad k=1\ldots \dimT,\,l=1\ldots T^g, \label{ec:subbloque_rataM}
+\end{equation}
+y:\begin{equation}
+ \gamma_{l}=\left\lceil \frac{l}{\Pi_2^g} \right\rceil\bmod n_g.\label{ec:coef_gammas_rataMod}
+\end{equation}
+\quad Finalmente el algoritmo de c\'omputo, esta vez es:
+
+\begin{algorithm}[H]
+\caption{rataMod}\label{algo:rataMod}
+\LinesNumbered
+\KwIn{$\rho$, $id$: Matriz densidad, n\textdegree{} subespacio asociado al modo.}
+\KwOut{$r=\rho\hat{a}^\dag\hat{a}$}
+\Begin{
+      $k=ord[id]$\;
+      $pi1= producto(ord[1:id-1])$\;
+      $pi2= producto(ord[id+1:\dimT])$\;
+      $T=(k-1)*pi2$\;
+      $pi3=T+pi2$\;
+      $r=ceros(\dimT)$\;
+      
+     \For{$bj=0$ hasta $(pi1-1)\cdot pi3$; $bj+=pi3$}{
+      \For{$ei=1$ hasta $\dimT$}{
+	\For{$ej=1$ hasta $T$}{
+	  $\gamma=\left\lceil\frac{ej}{pi2}\right\rceil\bmod k$\;
+	  $r[ei,\,pi2+bj+ej]=\gamma\cdot\rho[ei,\,pi2+bj+ej]$\;
+	}
+      }
+  }
+}
+\end{algorithm}
+Y el n\'umero de operaciones necesarias es: $$\mathcal{O}\left(\dimT^2\left(\frac{n_g-1}{n_g}\right)\right)=\mathcal{O}\left(\dimT^2\right).$$
+\subsubsection*{Expresi\'on $\hat{\rho}\hat{a}\hat{a}^{\dag}$: } Utilizando el mismo esquema que en (\ref{ec:esquema_rhoa}), esta vez el resultado se puede describir por:\begin{equation}\left(
+\begin{array}{cc:cc:cc:cc}
+ \mathcal{B}_1 & \cdots & \mathcal{B}_2 & \cdots & \multicolumn{2}{:c:}{\mbox{\Huge$\cdots$}} &\mathcal{B}_n&\cdots
+\end{array}\right),
+\end{equation}
+Adem\'as si $M=\mathcal{B}_{i}$ y $S=B_{i}$ entonces las relaciones entre sus coeficientes son:\begin{equation}
+M_{kl}=\gamma_{l}S_{kl},\,\qquad k=1\ldots \dimT,\,l=1\ldots T^g, \label{ec:subbloque_raatM}
+\end{equation}
+y:\begin{equation}
+ \gamma_{k}=\left\lceil \frac{k}{\Pi_2^g} \right\rceil\bmod n_g.\label{ec:coef_gammas_raatMod}
+\end{equation}
+\quad Finalmente el algoritmo de c\'omputo, esta vez es:
+
+\begin{algorithm}[H]
+\caption{raatMod}\label{algo:raatMod}
+\LinesNumbered
+\KwIn{$\rho$, $id$: Matriz densidad, n\textdegree{} subespacio asociado al modo.}
+\KwOut{$r=\rho\hat{a}\hat{a}^\dag$}
+\Begin{
+      $k=ord[id]$\;
+      $pi1= producto(ord[1:id-1])$\;
+      $pi2= producto(ord[id+1:\dimT])$\;
+      $T=(k-1)*pi2$\;
+      $pi3=T+pi2$\;
+      $r=ceros(\dimT)$\;
+      
+     \For{$bj=0$ hasta $(pi1-1)\cdot pi3$; $bj+=pi3$}{
+      \For{$ei=1$ hasta $\dimT$}{
+	\For{$ej=1$ hasta $T$}{
+	  $\gamma=\left\lceil\frac{ej}{pi2}\right\rceil\bmod k$\;
+	  $r[ei,\,bj+ej]=\gamma\cdot\rho[ei,\,bj+ej]$\;
+	}
+      }
+  }
+}
+\end{algorithm}
+\quad Y el n\'umero de operaciones necesarias es: $$\mathcal{O}\left(\dimT^2\left(\frac{n_g-1}{n_g}\right)\right)=\mathcal{O}\left(\dimT^2\right).$$
+\subsubsection{Expresiones tipo $\hat{\rho}\rightarrow \hat{a}_{ij}\hat{\rho}\hat{a}_{ij}^{\dag}$}\label{sec:expre_atomicas_orden2} \quad Esta vez se continuar\'a lo realizado en (\ref{sec:aijrho}). Comenzaremos con:
+\subsubsection*{Expresi\'on $\hat{a}_{ij}\hat{\rho}\hat{a}_{ij}^{\dag}$: } \quad Esta vez, $\rho$ ser\'a dividido en $\dimAt^2$ bloques cuadrados del mismo orden $\Pi$. As\'i, $\rho$ es esquematizado seg\'un:\begin{equation}\rho=\left(
+ \begin{array}{c:c:c:c}
+B_{11}&B_{12}&\cdots&B_{1\,\Pi}\\\hdashline
+B_{21}&B_{22}&\cdots&B_{2\,\Pi}\\\hdashline
+\vdots &\vdots &\ddots &\vdots \\\hdashline
+B_{\Pi\,1}&B_{\Pi\,2}&\cdots&B_{\Pi\,\Pi}
+ \end{array}\right).
+\end{equation}
+Y el resultado de $\hat{a}_{ij}\hat{\rho}\hat{a}_{ij}^{\dag}$ es esquematizado seg\'un:\begin{equation}
+ \mbox{$i$-\'esimo}\{
+\overset{\overbrace{}^{ \mbox{$i$-\'esimo} }}{\left(\begin{array}{ccc}
+&\vdots&\\
+\cdots&B_{jj}&\cdots\\
+&\vdots&
+\end{array}
+\right)}.
+\end{equation}
+Es decir, el bloque $B_{jj}$ es trasladado a la posici\'on del bloque $B_{ii}$ y el resto de la matriz resultado son elementos nulos. Por ejemplo, si $\dimAt=3$, podemos dividir $\rho$ en los nueve bloques cuadrados de orden $\Pi$:
+$$\rho=\left(\begin{array}{ccc}
+B_{11}&B_{12}&B_{13}\\
+B_{21}&B_{22}&B_{23}\\
+B_{31}&B_{32}&B_{33}
+\end{array}\right),$$
+entonces:
+$$\hat{a}_{13}\rho\hat{a}^{\dag}_{13}=\left(
+\begin{array}{ccc}
+ B_{33} & \mathbb{O}^\Pi& \mathbb{O}^\Pi\\
+\mathbb{O}^\Pi&\mathbb{O}^\Pi&\mathbb{O}^\Pi\\ 
+\mathbb{O}^\Pi&\mathbb{O}^\Pi&\mathbb{O}^\Pi
+\end{array}\right).$$
+\quad El algoritmo que realiza estos c\'omputos es descrito a continuaci\'on:
+
+\begin{algorithm}[H]
+\caption{aratAt}\label{algo:aratAt}
+\LinesNumbered
+\KwIn{$\rho$, $i$, $j$.}
+\KwOut{$r=\hat{a}_{ij}\rho\hat{a}_{ij}^\dag$}
+\Begin{
+      $pi = producto(ord[2:\dimT])$\;
+      $i1 = i\cdot pi$\;
+      $j1 = j\cdot pi$\;
+      $r=ceros(pi)$\;
+     \For{$\{ei,\,ej\}=1$ hasta $pi$}{
+      $r[i1+ei,i1+ej]=rho[j1+ei,j1+ej]$\;
+      }
+}
+\end{algorithm}
+\subsubsection*{Expresi\'on $\hat{a}_{ij}^{\dag}\hat{a}_{ij}\hat{\rho}$} Utilizando nuevamente el esquema (\ref{ec:esquema_aijrho}), esta vez el resultado es esquematizado por:
+$$\mbox{$j$-\'esimo}\{\left(
+\begin{array}{c}
+ \cdots\\
+B_j\\
+\cdots
+\end{array}
+\right).
+$$
+Por ejemplo si $\dimA=3$ y escribimos:
+$$\rho=\left(\begin{array}{ccc}              
+B_1\\
+B_2\\
+B_3
+\end{array}\right),
+$$
+entonces:
+$$\rho\hat{a}^{\dag}_{13}\hat{a}_{13}=\left(\begin{array}{ccc}              
+\mathbb{O}^\Pi\\
+\mathbb{O}^\Pi\\
+B_{3}
+             \end{array}\right).
+$$
+\quad Describimos ahora el algoritmo que realiza \'estos c\'omputos:
+
+\begin{algorithm}[H]
+\caption{atarAt}\label{algo:atarAt}
+\LinesNumbered
+\KwIn{$\rho$, $i$, $j$.}
+\KwOut{$r=\hat{a}_{ij}^\dag\hat{a}_{ij}\rho$}
+\Begin{
+      $pi = producto(ord[2:\dimT])$\;
+      $j1 = j\cdot pi$\;
+      $r=ceros(pi)$\;
+     \For{$ei=1$ hasta $pi$}{
+     \For{$ej=1$ hasta $\dimT$}{
+      $r[j1+ei,j1+ej]=rho[j1+ei,j1+ej]$\;
+      }
+  }
+}
+\end{algorithm}
+\subsubsection*{Expresi\'on $\hat{\rho}\hat{a}_{ij}^{\dag}\hat{a}_{ij}$} Utilizando nuevamente el esquema (\ref{ec:esquema_rhoaij}), el resultado estar\'a dado por:
+$$\overset{ \overbrace{}^{\mbox{$j$-\'esimo}}}{\left(\begin{array}{ccc}
+\cdots&B_{j}&\cdots
+        \end{array}\right)}.
+$$
+\quad Es decir, en este caso no hay movimiento del bloque, s\'olo anulaci\'on de todo el resto de los elementos. Por ejemplo si $\dimA=3$ y escribimos:
+$$\rho=\left(\begin{array}{ccc}              
+B_{1}&B_2&B_3
+             \end{array}\right),
+$$
+entonces:
+$$\hat{a}^{\dag}_{13}\hat{a}_{13}\rho=\left(\begin{array}{ccc}              
+\mathbb{O}^\Pi&\mathbb{O}^\Pi&B_{3}
+             \end{array}\right).
+$$
+\quad A continuaci\'on se presenta el algoritmo que genera \'estos c\'omputos:
+
+\begin{algorithm}[H]
+\caption{rataAt}\label{algo:rataAt}
+\LinesNumbered
+\KwIn{$\rho$, $i$, $j$.}
+\KwOut{$r=\rho\hat{a}_{ij}^\dag\hat{a}_{ij}$}
+\Begin{
+      $pi = producto(ord[2:\dimT])$\;
+      $j1 = j\cdot pi$\;
+      $r=ceros(pi)$\;
+     \For{$ei=1$ hasta $\dimT$}{
+     \For{$ej=1$ hasta $pi$}{
+      $r[j1+ei,j1+ej]=rho[j1+ei,j1+ej]$\;
+      }
+  }
+}
+\end{algorithm}
+\subsubsection*{N\'umero de operaciones} Los resultados mostrados en esta secci\'on son de relevante importancia, puesto que hemos reemplazado las $\mathcal{O}(\dimT^3)$ operaciones por: 
+$$\frac{\dimT^2}{\dimAt^2}=\mathcal{O}(\dimT^2)$$
+\emph{asignaciones} en el primer caso, y:
+$$\frac{\dimT^2}{\dimAt}=\mathcal{O}(\dimT^2),$$
+\emph{asignaciones} en el los dos \'ultimos.
+
+\subsection{Algoritmos espec\'ificos}
+\quad Ahora que conocemos la forma de computar los operadores involucrados en nuestro modelo, y las tambi\'en las composiciones de dichos operadores, utilizamos \'estos algoritmos para escribir los que compondr\'an a los algoritmos generales escritos en (\ref{sec:codigos_generales}). Antes, definimos las variables globales a ser utilizadas:
+
+\begin{tabular*}{\textwidth}{ll}
+\hline\multirow{2}{*}{\large{Variable}}&\multirow{2}{*}{\large{Descripci\'on}}\\ &\\ \hline\\\vspace*{0.5cm}
+$nlaser$ & N\'umero de l\'aseres acoplados al \'atomo.\\
+$omega(i)$ & Amplitud fija del l\'aser $i$.\\\\
+$sigma(i)$ & Varianza de gaussiana de la amplitud del l\'aser $i$ en el tiempo.\\\\
+$nmod\equiv \nmod$ & Equivalente al n\'umero de modos acoplados al \'atomo.\\\\
+$mod$ & Arreglo de enteros. mod(i) indica la posici\'on del modo i en la composici\'on de espacios.\\\\
+$g$ & Arreglo de reales. $g(i)$ es la constante de acoplamiento del modo $i$ al \'atomo.\\\\
+$v$ & Arreglo de reales. $v(i)$ es el cambio de fase del l\'aser $i$ determinadas a segundo orden,\\
+    & \'vease \cite{robert}.\\\\
+$exprAt$ & Arreglo de cadenas de caract\'eres. Especifica el tipo de expresiones at\'omicas involucra-\\
+	&das en (\ref{limbladiano}).\\\\
+$exprMod$ & Arreglo de cadenas de caract\'eres. Especifica el tipo de expresiones de los modos involucra-\\
+	&das en (\ref{limbladiano}).\\\\
+$gammaAt$ & Arreglo de reales. $gammaAt(i)$ es el coeficiente que pondera a $exprAt(i)$ \\
+	  & en (\ref{limbladiano}).
+\end{tabular*} 
+\subsubsection{Error Relativo}
+\quad Empezaremos fijando la atenci\'on en la L\'inea \ref{algo:main_int_err:linea:error} del Algoritmo \ref{algo:main_int_err}. Vemos que lo hace falta un algoritmo que calcule la norma de Frobenius de una matriz utilizando el resultado (\ref{ec:frob_final}). As\'i, escribimos:
+
+\begin{algorithm}[H]
+\caption{normFrob}\label{algo:norma_frob}
+\LinesNumbered
+\KwIn{$\rho$}
+\KwOut{$error$}
+$error=0$\;
+\Begin{\For{$i=1$ hasta $\dimT$}{
+    \For{$j=i+1$ hasta $\dimT$}{
+      $error=error+2\cdot rho[i,\,j]\cdot rho[i,j]^*$\;
+    }
+    $error=error+rho[i,\,i]\cdot rho[i,i]^*$;
+  }
+}
+\end{algorithm}
+\quad Donde hemos usado el hecho que la matriz es Herm\'itica, por tanto basta sumar sobre la diagonal y \emph{dos veces} la matriz triangular superior.
+\subsubsection{Conmutador de Hamiltoniano y $\rho$}
+\quad En este trabajo se har\'a uso del Punto de Vista de Interacci\'on (o \emph{interaction picture}), marco te\'orico en el cual s\'olo es considerado el Hamiltoniano de Interacci\'on (\ref{ec:HI}), para mayor informaci\'on acerca de esta transformaci\'on de las ecuaciones el lector puede referirse a \cite{carmichael} secci\'on 1.2. Observando entonces (\ref{ec:HI}), es inmediato que dos posibles estrategias aparecen. La primera, calcular el hamiltoniano en el momento $t$ y luego hacer $(H\,\rho-\rho\,H)$. La segunda, y que result\'o ser, como se esperaba la de mayor eficiencia, es hacer uso de los algoritmos, que computan la acci\'on de cada uno de los operadores, que componen (\ref{ec:HI}), sobre $\rho$, tanto por la izquierda como por la derecha. Realizamos a continuaci\'on el algoritmo de esta segunda forma de c\'omputo:
+
+\begin{algorithm}[H]
+\caption{conmuH}\label{algo:conmuH}
+\LinesNumbered
+\KwIn{$\rho,\,t,\,z$}
+\KwOut{$z=z+i\cdot[H(t),\,\rho]$}
+\Begin{
+$c=ceros(\dimT)$\;
+\CommentSty{ // parte acoplamiento l\'aser-\'atomo, suponemos un pulso gaussiano}\;
+\For{$i=1$ hasta $nlaser$\label{algo:conmuH_linea_inicial_loop_At}}{ 
+  $Aomega=omega[i]*\exp(-(t-tm)^2/sigma[i]^2)$\;
+\CommentSty{ // multiplicaci\'on por la derecha}\;
+  $c=c+Aomega\cdot \exp\left(-i\cdot v(i)t\right)\cdot \mbox{arAt}(\rho,\,intAt(i),\,\mbox{'n'})$\;
+\CommentSty{ // multiplicaci\'on por la derecha conjugada}\;
+  $c=c+Aomega\cdot \exp\left(i\cdot v(i)t\right)\cdot \mbox{arAt}(\rho,\,intAt(i),\,\mbox{'c'})$\;
+\CommentSty{ // multiplicaci\'on por la izquierda}\;
+  $c=c-Aomega\cdot \exp\left(-i\cdot v(i)t\right)\cdot \mbox{raAt}(\rho,\,intAt(i),\,\mbox{'n'})$\;
+\CommentSty{ // multiplicaci\'on por la izquierda conjugada}\;
+  $c=c-Aomega\cdot \exp\left(i\cdot v(i)t\right)\cdot \mbox{raAt}(\rho,\,intAt(i),\,\mbox{'c'})$\;
+  }\label{algo:conmuH_linea_final_loop_At}
+\CommentSty{ // parte acoplamiento modo-\'atomo}\;
+\For{$i=1$ hasta $nmod$\label{algo:conmuH_linea_inicial_loop_AM}}{
+\CommentSty{ // multiplicaci\'on por la derecha}\;
+  $aux=\mbox{arMod}(\rho,\,mod(i),\,\mbox{'n'})$\;
+  $c=c+g(i)\cdot\mbox{arAt}(aux,\,acop(i),\,\mbox{'n'})$\;
+\CommentSty{ // multiplicaci\'on por la derecha conjugada}\;
+  $aux=g(i)\cdot\mbox{arAt}(\rho,\,acop(i),\,\mbox{'c'})$\;
+  $c=c+\mbox{arMod}(aux,\,mod(i),\,\mbox{'c'})$\;
+\CommentSty{ // multiplicaci\'on por la izquierda}\;
+  $aux=g(i)\cdot\mbox{raAt}(\rho,\,acop(i),\,\mbox{'n'})$\;
+  $c=c-\mbox{raMod}(aux,\,mod(i),\,\mbox{'n'})$\;
+\CommentSty{ // multiplicaci\'on por la izquierda conjugada}\;
+  $aux=\mbox{raMod}(\rho,\,mod(i),\,\mbox{'c'})$\;
+  $c=c+g(i)\cdot\mbox{raAt}(aux,\,acop(i),\,\mbox{'c'})$\;
+  }\label{algo:conmuH_linea_final_loop_AM}
+  $z=z+i\cdot c$\;
+}
+\end{algorithm}
+
+\quad En el Algoritmo \ref{algo:conmuH} hemos inclu\'ido una leve variante a los algoritmos arMod arAt y sus variantes, \'esta consiste en indicar mediante un par\'ametro, 'n' o 'c', si el operador involucrado debe ser conjugado o no, de esta forma ahorramos unas l\'ines de c\'odigo, siendo f\'acil implementar dichas modificaciones en los Algoritmos respectivos.
+
+\subsubsection{Limbladiano} \quad Escribiremos una forma general de c\'omputo del Limbladiano a partir de (\ref{limbladiano}).
+
+\begin{algorithm}[H]
+\caption{limbladiano}\label{algo:limbladiano2}
+\LinesNumbered
+\KwIn{$\rho,\,l$}
+\KwOut{$l=l+\mbox{Limbladiano}(\rho)$}
+\Begin{
+\CommentSty{ // En este trabajo}\;
+\CommentSty{ // $exprAt=$'arat', 'atar', 'rata'}\;
+\CommentSty{ // $exprMod=$'arat', 'atar', 'rata', 'atra', 'raat'}\;
+  \For{$i=1$ hasta $niniterAt$\label{algo:limb2_linea_inicial_loop_At}}{
+    $l=l+\mbox{araAt2}(\rho,\,intAt(i),\,gammaAt(i),\,exprAt)$\;
+  }\label{algo:limb2_linea_final_loop_At}
+  \For{$i=1$ hasta $nmod$\label{algo:limb2_linea_inicial_loop_mod}}{
+    $l=l+\mbox{araMod2}(\rho,\,mod(i),\,gammaMod(i),\,exprMod)$\;
+  }\label{algo:limb2_linea_final_loop_mod}
+}
+\end{algorithm}
+
+\quad En el Algoritmo \ref{algo:limbladiano2} hemos utilizado las dos funciones auxiliares araAt2 y araMod2, s\'olo es necesario especificas que \'estas funciones seleccionan la rutina a ejecutar, de las vistas en (\ref{sec:computo_eficiente_operadores}) a partir de los arreglos de expresiones $exprAt$ y $exprMod$, multiplicando cada resultado por los coeficientes asignados a los arreglos $gammaAt$ y $gammaMod$ respectivamente.

@@ -1,0 +1,40 @@
+\section*{Anexo}
+\fancyhf{}
+\fancyfoot[L]{\titlem}
+\fancyfoot[R]{\thepage} 
+\fancyhead[R]{Anexo}
+\addcontentsline{toc}{section}{\bfseries Anexo}
+\setcounter{section}{1}
+\setcounter{subsection}{0}
+\renewcommand{\thesection}{\Alph{section}}
+A continuaci\'on hacemos una breve descripci\'on del software utilizado durante la realizaci\'on del presente trabajo.
+
+\subsection{IFORT}\qquad Compilador de Intel para el lenguaje de programaci\'on Fortran, utilizado en este trabajo. Es un compilador de alto rendimiento pensado en especial para procesadores Intel, mayor informaci\'on puede ser obtenida en:
+\begin{center}
+ \url{http://software.intel.com/en-us/articles/intel-composer-xe/}.
+\end{center}
+
+\qquad En pruebas realizadas, super\'o siempre al popular compilador GNU \verb|gfortran|. Adem\'as se utiliz\'o la licencia de ``Software No Comercial'' (Non-Comercial Software), se puede encontrar informaci\'on acerca de este tipo de Software de Intel en:
+\begin{center}
+\url{http://software.intel.com/en-us/articles/non-commercial-software-download/}.\\
+\end{center}
+
+\subsection{OpenMP}\qquad Es una ``Interfaz de programaci\'on de aplicaciones'' o API, por sus siglas en ingl\'es. Permite la creaci\'on de programas que realicen c\'omputos en paralelo en arquitecturas de memoria compartida (v\'ease \cite{arquitectura_pcs}). La idea de su creaci\'on fue facilitar la creaci\'on de Software de c\'omputo en paralelo de manera sencilla y portable. OpenMP no es un lenguaje de programaci\'on, sino, consiste en una serie de directivas que son a\~nadidas a los c\'odigos fuentes de un programa secuencial, escrito en C/C++ o Fortran, de manera tal que describan c\'omo el trabajo es debe ser compartido entre los diferentes hilos de procesamiento que ser\'an ejecutados en diferentes procesadores o n\'ucleos y para ordenar el acceso a la memoria compartida por \'estos hilos. Mayor informaci\'on puede encontrada en \cite{openmp} o en:
+\begin{center}
+\url{http://www.openmp.org}\\
+\end{center}
+
+\subsection{Scilab}\qquad Su nombre resume su versatilidad: en espa\~nol, ``Laboratorio Cient\'ifico''. Es un software libre de c\'odigo abierto (Free Open Source Software) para Computaci\'on Num\'erica. Provee un ambiente de c\'omputo para aplicaciones en ingenier\'ia y ciencia. Es un lenguaje de programaci\'on de alto nivel, con cientas de funciones matem\'aticas, permite por ejemplo, el acceso a estructuras de datos complejas, generaci\'on de gr\'aficos en 2-D y 3-D, entre otras capacidades. \verb|Scilab| es distribuido bajo licencia CeCILL, compatible con GPL. En el presente trabajo se hizo uso de la versi\'on 5.3.3 por su estabilidad, f\'acil acceso a la ayuda y mejorada interface. Puede encontrarse mayor informaci\'on y realizar la descarga de esta poderosa herramienta en:
+\begin{center}
+\url{http://www.scilab.org}\\
+\end{center}
+
+\subsection{Dia} \qquad Programa de desarrollo de diagramas, basado en gtk+. Fue utilizado para la realizaci\'on de las figuras \ref{fig:decaimientos}  y \ref{fig:laseres}. Es distribuido bajo licencia GNU. Puede descargarse, y encontrarse documentaci\'on acerca de este software en:
+\begin{center}
+\url{http://projects.gnome.org/dia/}\\
+\end{center}
+
+\subsection{Kile}\qquad Excelente entorno de desarrollo de \LaTeX, integrado en el entorno de escritorio KDE. Es distribuido bajo licencia GNU. Puede descargarse, y encontrarse documentaci\'on acerca de este software en:
+\begin{center}
+\url{http://kile.sourceforge.net/}\\
+\end{center}

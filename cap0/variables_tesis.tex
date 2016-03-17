@@ -1,0 +1,73 @@
+\renewcommand{\contentsname}{Índice} 
+\renewcommand{\appendixname}{Apéndice} 
+\renewcommand{\figurename}{Figura}
+\renewcommand{\listfigurename}{Índice de Figuras} 
+\renewcommand{\tablename}{Tabla} 
+\renewcommand{\listtablename}{Índice de tablas} 
+\renewcommand{\refname}{}%Bibliografía} 
+\renewcommand{\listalgorithmcfname}{Lista de Algoritmos}%
+\renewcommand{\algorithmcfname}{Algoritmo}%
+
+\onehalfspacing
+\parindent 3em
+\titlecontents{section}
+  [0pt]
+  {\addvspace{0.1pc}}%
+  {\contentsmargin{0pt}%
+  \bfseries
+  \makebox[30pt][l]{Capítulo\ \thecontentslabel.}%
+  \hspace*{2.5em}}
+  {\contentsmargin{0pt}}
+  {\titlerule*[100pc]{.}\contentspage}
+  [\addvspace{.1pc}]
+\tableofcontents %índice
+\newpage
+\listoftables %lista de tablas
+\newpage
+\listoffigures %lista de figuras
+\newpage
+\listofalgorithms %lista de algoritmos
+\newpage
+\pagestyle{fancy}%lineas encabezado
+\renewcommand{\footrulewidth}{0.5pt}
+\renewcommand{\headrulewidth}{0.5pt}
+\newcommand{\sectionm}[1]{\section{#1}\fancyhead[R]{Capítulo \thesection.\quad #1 }\parindent=0em}%\addcontentsline{toc}{section}{Capítulo \thesection.\quad #1}}
+\setcounter{page}{1}
+\makeatletter
+
+\def\@seccntformat#1{\@ifundefined{#1@cntformat}%
+{\csname  the#1\endcsname\quad}%    default
+{\csname  #1@cntformat\endcsname}%  individual  control
+}
+\def\section@cntformat{Capítulo \thesection.\quad}
+\def\subsection@cntformat{\thesubsection.\quad}
+\makeatother
+\sectionfont{\centering\underline}
+
+%\newcommand{\thepagem}{\hspace*{2cm}\thepage}
+
+\newcommand{\Pag}[1]{
+\stepcounter{capitulo}
+\pagestyle{empty}%paginas en blanco
+\vspace*{6.5cm}
+\begin{center}
+\LARGE{\textbf{CAPÍTULO \thecapitulo}}\\
+\vspace*{0.2cm}
+\LARGE{\textbf{#1}}
+\end{center}
+\addtocounter{page}{-1}
+\newpage
+
+\pagestyle{fancy}%lineas encabezado
+\fancyhf{}
+\fancyfoot[C]{\titlem\hspace*{5cm}\thepage}
+%\fancyfoot[R]{\thepagem} 
+}
+
+\newcounter{capitulo}
+\clearpage
+ \makeatletter
+ \@addtoreset {equation}{section}
+ \makeatother
+
+\renewcommand{\theequation}{\arabic{section}.\arabic{equation}}

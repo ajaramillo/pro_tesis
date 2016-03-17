@@ -1,0 +1,51 @@
+%%%Creado por Miguel Navarro inicio de edición Agosto 2008
+
+\documentclass[11pt]{article}
+%\documentclass[11pt,letter]{article}
+%\usepackage[spanish]{babel}
+%\usepackage[latin9]{inputenc} % Caractres con acentos. 
+\input{cap0/cabecera_tesis}
+%\hyphenation{si-gui-ente}
+%\hyphenation{res-pues-tas}
+\begin{document}
+
+\parskip 1em
+\include{cap0/portadaanteproyecto}
+\include{cap0/comision}
+\include{cap0/resumen} %descripción del documento
+\include{cap0/dedicatoria}
+\include{cap0/agradecimientos}
+\input{cap0/variables_tesis} 
+%%inicio del documento
+
+%%PRIMERA PARTE : INTRO, Física-Matemática
+\pagestyle{empty}%paginas en blanco
+\begin{center}
+\part*{Problema F\'isico-Matem\'atico}
+\end{center}
+\include{cap1/intro_gral} %descripción gral. del trabajo. Objetivos.
+\include{cap2/fundamentos_fisicos}
+\include{cap3/modelo_fisico} %modelo
+
+%%SEGUNDA PARTE : MATEMÁTICA-COMPUTACIONAL
+\pagestyle{empty}%paginas en blanco
+\begin{center}
+  \part*{Problema Matem\'atico-Computacional}
+\end{center}
+%\include{intro3}
+\include{cap4/computacional} %repr.operadores (sparse), cálculo paralelo de rho's
+
+%%TERCERA PARTE : RESULTADOS Y CONCLUSIONES
+\pagestyle{empty}%paginas en blanco
+\begin{center}
+ \part*{Resultados y conclusiones}
+\end{center}
+
+\include{cap5/resultados}
+
+\include{conclusion_nomenclatura_bibliografia/conclusion}
+\include{conclusion_nomenclatura_bibliografia/nomenclatura}
+\include{conclusion_nomenclatura_bibliografia/bibliografia}
+\include{cap_anexos/anexoa}
+%\include{cap_anexos/anexob}
+\end{document}

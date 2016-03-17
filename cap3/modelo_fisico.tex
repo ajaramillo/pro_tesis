@@ -1,0 +1,258 @@
+\Pag{Modelo Estudiado}
+\sectionm{Modelo Estudiado}
+\subsection{El I\'on $Ca^{+}$}\label{ionca}
+ \quad A grandes rasgos, uno de los principales resultados de la Mec\'anica Cu\'antica, aplicada a la modelaci\'on de \'atomos, es que los electrones se distribuyen al rededor del n\'ucleo formando nubes electr\'onicas organizadas por capas o casquetes, cada una m\'as alejada al n\'ucleo que la otra. En el caso del Calcio, tal como aparece en la tabla peri\'odica, estas tres primeras capaz se encuentran completas y dos electrones m\'as, se encuentran en la cuarta capa. Sin embargo, estos \'ultimos electrones est\'an ligados d\'ebilmente, lo que significa que la energ\'ia necesaria para ionizar este \'atomo es baja. Por esto \'ultimo, en la naturaleza, el calcio se encuentra ionizado, esto se denota $Ca^+$ significando que uno de los electrones de la \'ultima capa ha sido perdido, habiendo emitido un fot\'on. Por poseer s\'olo un electr\'on libre en la \'ultima capa, se dice que el $Ca^+$ tiene forma hidrogenoide, esto es, su comportamiento es ``similar'' al del Hidr\'ogeno, que tambi\'en posee s\'olo un electr\'on libre.\\
+
+\quad En este trabajo, los niveles de energ\'ia relevantes del $Ca^+$ ser\'an cinco, denotando por $\ket{0}$ el nivel fundamental, o de m\'inima energ\'ia, $\ket{1}$ el siguiente nivel, hasta el nivel $\ket{4}$, el de mayor energ\'ia. Las correspondencias formales con los niveles at\'omicos est\'andares es la siguiente:
+\begin{eqnarray*}
+\ket{0}&\rightarrow& 4^2S_{1/2}\\
+\ket{1}&\rightarrow& 3^2D_{3/2}\\
+\ket{2}&\rightarrow& 3^2D_{5/2}\\
+\ket{3}&\rightarrow& 4^2P_{1/2}\\
+\ket{4}&\rightarrow& 4^2P_{1/2}
+\end{eqnarray*}
+
+\quad Para mayor informaci\'on acerca de la nomenclatura utilizada para describir los niveles at\'omicos el lector puede consultar \cite{eisberg} secci\'on 9.7.\\
+
+\quad La idea de absorci\'on de radiaci\'on, presentada en (\ref{absorcion}) puede ser utilizada para llevar un \'atomo a un nivel de mayor energ\'ia si as\'i se desea, la fuente de luz utilizada para este fin es un l\'aser; se dice que el l\'aser es utilizado para \emph{bombear} el \'atomo del nivel energ\'etico menor al mayor. El l\'aser $1$ lleva al \'atomo del nivel $\ket{1}$ al $\ket{3}$ y el l\'aser $2$ del $\ket{0}$ al $\ket{4}$.\\
+\begin{figure}[h]
+\centering
+\begin{minipage}{0.52 \linewidth}
+\centering
+  \includegraphics[scale=0.4]{cap3/nivelesmodelo_transiciones.eps}\caption{Esquematizaci\'on de los decaimientos de los niveles at\'omicos.}\label{fig:decaimientos}
+\end{minipage}
+\begin{minipage}{0.52 \linewidth}
+\centering
+  \includegraphics[scale=0.4]{cap3/nivelesmodelo_laseres.eps}\caption{Esquematizaci\'on de las transiciones producto de los l\'aseres.}\label{fig:laseres}
+\end{minipage}
+\end{figure}
+\clearpage
+
+\quad Adem\'as, en nuestro modelo, el \'atomo se encuentra acoplado a dos modos del campo electromagn\'etico al interior de la cavidad, uno de estos modos, el modo $a$, se acopla a las transiciones energ\'eticas del \'atomo entre $\ket{3}$ y $\ket{0}$, el otro, el modo $b$, se acopla a las transiciones entre $\ket{4}$ y $\ket{2}$. Las interacciones producto de los decaimientos espont\'aneos, esquematizadas en la Figura \ref{fig:decaimientos}, y las producto de los l\'aseres en la Figura \ref{fig:laseres}, las resumimos a continuaci\'on:
+
+\begin{itemize}
+ \item[$\ket{0}$: ] Desde este nivel, el \'atomo es llevado al nivel $\ket{4}$ por el l\'aser $2$. Por tratarse del nivel fundamental, no existen posibles decaimientos. Existe tambi\'en la probabilidad de reabsorver un fot\'on presente en el modo $a$ y que el \'atomo regrese al nivel $\ket{1}$, pero esta probabilidad es despreciable frente a la mencionada anteriormente.
+
+\item[$\ket{1}$: ] Como ya dijimos, desde este nivel el \'atomo es llevado al nivel $\ket{3}$ por el l\'aser $1$. No es posible que el \'atomo decaiga al nivel fundamental, producto de las reglas de selecci\'on (v\'ease \cite{griffiths} secci\'on 9.3.3).
+
+\item[$\ket{2}$: ] Este estado es absorvente, en el sentido que por reglas de selecci\'on, el \'atomo no puede caer a niveles inferiores.
+
+\item[$\ket{3}$: ] Desde este estado, el \'atomo decaer\'a al nivel fundamental, emitiendo un fot\'on en el modo $a$, siendo casi nula la probabilidad que decaiga de regreso al nivel $\ket{1}$.
+
+\item[$\ket{4}$: ] Desde este estado, el \'atomo decaer\'a al nivel $\ket{2}$, emitiendo un fot\'on en el modo $b$, no pudiendo decaer a otros estados por las reglas de selecci\'on, salvo al fundamental con probabilidad despreciable, pero de todas maneras retorna al nivel $\ket{4}$ (esto lleva a definir m\'as adelante la \emph{tasa de transici\'on}).
+\end{itemize}
+
+\subsection{Modelo Matem\'atico}\label{sec:modelo_matematico}
+\subsubsection{$\mathcal{H}_{at}$, $\mathcal{H}_a$, $\mathcal{H}_b$ y el espacio compuesto $\mathcal{H}$}\label{HatHaHb}
+
+\quad El espacio de Hilbert al cual pertenecen los posibles estados del \'atomo, es de dimensi\'on infinita, sin embargo, s\'olo cinco de estos estados se encuentran involucrados en la evoluci\'on del sistema a estudiar, luego podemos truncar la dimensi\'on del Hilbert asociado al \'atomo, que denotaremos por $\mathcal{H}_{at}$. A saber, s\'olo poseer\'a cinco elementos en su base, es decir $\mathcal{H}_{at}=\left(\mathbb{C}^5,+,\cdot\right)$, tomando como base del espacio, la base can\'onica $\{e_i\}:\;i=1\ldots 5$, con, por ejemplo:
+
+$$
+e_1=\left(
+\begin{array}{cccc}
+0&0&0&0
+\end{array}
+\right)^t,
+$$
+
+y haciendo la correspondencia para los niveles at\'omicos de la secci\'on anterior\footnote{El sub\'indice ``at'' indica que el elemento pertenece al espacio asociado al \'atomo.}:
+
+$$\ket{i}_{at}\equiv e_i,\hspace{2cm}i=1\ldots 5.$$
+
+\quad Al igual que para el caso at\'omico, los espacios de Hilbert asociados a los modos $a$ y $b$ del campo electromagn\'etico acoplados al \'atomo, que denotarmos por $\mathcal{H}_a$ y $\mathcal{H}_b$ resp. ser\'an truncados en su dimensi\'on. En el caso en el cu\'al no existe ruido t\'ermico, este truncamiento se puede tomar como el m\'inimo de fotones posibles de ser emitidos por el \'atomo, es decir, dos. Cuando incluyamos el ruido t\'ermico en la secci\'on (\ref{ruidotermico}), este nivel de truncamiento ser\'a aumentado dado que el n\'umero de fotonos posibles en cada modo aumentar\'a.\\
+
+\quad Para el caso sin ruido t\'ermico seleccionamos entonces $\mathcal{H}_a=\mathcal{H}_b=\left(\mathbb{C}^3,+,\cdot\right)$, dado que se requiere que en la base del espacio est\'en los tres niveles posibles, desde $0$ a $2$ fotones. La base elegida en cada Hilbert ser\'a nuevamente la can\'onica (esta vez en $\mathbb{C}^3$) y la correspondencia para $\mathcal{H}_a$ con los kets del modo $a$ ser\'a:
+
+$$\ket{n}_a\equiv e_n,\hspace{2cm} n=1\ldots 3.$$
+
+la correspondencia para $\mathcal{H}_b$ es an\'aloga.\\
+
+\quad Finalmente, el espacio de Hilbert $\mathcal{H}$ que representa el sistema total, es el resultado de la composici\'on, mediante el producto tensorial, de estos espacios menores: $$\mathcal{H}=\mathcal{H}_{at}\otimes \mathcal{H}_{a} \otimes \mathcal{H}_{b}.$$
+
+\subsubsection{Variables y constantes involucradas}\label{sec:variables_involucradas}
+\begin{tabular*}{\textwidth}{ll}
+\hline\multirow{2}{*}{\large{Constante}}&\multirow{2}{*}{\large{Descripci\'on}}\\ &\\ \hline\\\vspace*{0.5cm}
+$\kappa_a$, $\kappa_b$ & Factor de p\'erdida de energ\'ia en la cavidad asociado al modo $a$, $b$ respectivamente.\\
+&V\'ease \cite{dutra}.\\\\
+
+$g_a$, $g_b$ & Constantes de acoplamiento entre los modos $a$ y $b$ resp. y los niveles at\'omicos asociados.\\\\
+
+$\delta_1$, $\delta_2$ & Par\'ametros de perturbaci\'on a segundo orden. V\'ease \cite{robert}.\\\\ 
+
+$\Omega_1(t)$, $\Omega_2(t)$ & Intensidad de los l\'aseres que bombean electrones en los niveles at\'omicos descritos en la\\& secci\'on (\ref{ionca}).\\\\
+
+$\vartriangle_1$, $\vartriangle_2$ & Desfase o \emph{detuning} entre las frecuencias de los niveles at\'omicos y las frecuencias efecti- \\&vamente alcanzadas por el electr\'on efecto del l\'aser producto del \emph{efecto Stark}. V\'ease \cite{single-photon}.\\\\
+
+$v_a$, $v_b$ & Frecuencias efectiva de interacci\'on entre los niveles at\'omicos y los modos $a$ y $b$ resp.\\\\
+
+$v_1$, $v_2$ & Frecuencias de los l\'aseres $1$ y $2$.\\\\
+$\Gamma_{ij}$ & Tasa de transici\'on del nivel $j$ al nivel $i$.\\\\
+$\nmod$ & N\'umero de modos del campo electromagn\'etico acoplados al \'atomo. $\nmod=2$ en este \\&trabajo.\\\\
+$\dimAt$ & N\'umero de niveles at\'omicos relevantes en el modelo. $\dimAt=5$ en este trabajo.\\\\
+$\dimA,\dimB$ & Dimensi\'on del espacio $\mathcal{H}_a$ y $\mathcal{H}_b$ asociados al los modos del campo electromagn\'etico\\ &  $a$, $b$ respectivamente. Esto corresponde al n\'umero de fotones permitidos m\'as uno.\\
+$\dimT$ & Dimensi\'on del espacio mayor $\mathcal{H}$.
+\end{tabular*} 
+
+\subsubsection{Operadores involucrados}\label{sec:operadores_involucrados}
+
+\quad A continuaci\'on describimos los operadores a utilizar (De aqu\'i en adelante, utilizaremos $\ket{i}$ para denotar exclusivamente el ket que representa el nivel $i$ del \'atomo, en otro caso se utilizar\'a e sub\'indice correspondiente):
+
+\begin{tabular*}{\textwidth}{ll}
+\hline\multirow{2}{*}{\large{Operador}}&\multirow{2}{*}{\large{Descripci\'on}}\\ &\\ \hline\\\vspace*{0.5cm}
+
+$I_{at}$ & Operador identidad en el espacio $\mathcal{H}_{at}$.\vspace*{0.5cm} \\\hline\\\vspace*{0.5cm}
+
+$I_a$  & Operador identidad en el espacio $\mathcal{H}_{a}$. An\'alogo para $I_{b}$.\vspace*{0.5cm}\\\hline\\\vspace*{0.5cm}
+
+$\hat{a}$& \begin{minipage}{14cm}
+      Act\'ua seg\'un $\mathcal{H}_a\rightarrow \mathcal{H}_a$. Operador de creaci\'on del modo $a$, llamado as\'i puesto que opera \emph{generando} un fot\'on en el modo $a$. Este es equivalente al operador de subida descrito en la secci\'on (\ref{osciladorarmonico}). Sin embargo, en secciones siguientes utilizaremos esta misma notaci\'on (sin ambig\"uedad pues el significado ser\'a le\'ido del contexto) para denotar el operador que act\'ua seg\'un $\mathcal{H}\rightarrow\mathcal{H}$ y definido por:
+
+\begin{equation}
+ \hat{a}\equiv I_{at}\otimes \hat{a} \otimes I_b,\label{ec:operador_creacion_a}
+\end{equation}
+
+El lector no debe confundirse, al lado izquierdo hemos definido el nuevo operador en funci\'on del operador descrito en el p\'arrafo anterior. An\'alogo para $\hat{b}$.
+     \end{minipage}\vspace*{0.5cm}\\\hline\\\vspace*{0.5cm}
+
+$\hat{a}_{ij}$ & \begin{minipage}{14cm} Act\'ua seg\'un $\mathcal{H}\rightarrow\mathcal{H}$. Operador de transiciones at\'omicas definido por: 
+
+\begin{equation}\hat{a}_{ij}\equiv \ket{i}\bra{j}\otimes I_a \otimes I_b.\label{ec:operador_transicion_H}
+\end{equation} \end{minipage}\vspace*{0.5cm}\\\hline\\\vspace*{0.5cm}
+\end{tabular*} 
+
+En la siguiente secci\'on describiremos otros operadores a utilizar pero de mayor importancia conceptual.
+
+\subsubsection{Ecuaci\'on maestra}\label{ecuacionmaestra}
+\quad Por \emph{Ecuaci\'on maestra} (o \emph{Ecuaci\'on de evoluci\'on}) entenderemos la ecuaci\'on diferencial que describe el comportamiento en el tiempo del estado del sistema o alg\'un equivalente. Siendo $\psi(t)\in \mathcal{H}$ el estado del sistema en un instante $t$, definimos el operador de densidad $\rho$ mediante\footnote{Por simplicidad, escribiremos simplemente $\rho$, omitiendo el s\'imbolo \textasciicircum }:
+\begin{equation}
+ \rho\equiv\ket{\psi}\bra{\psi},\label{operadordensidad}
+\end{equation}
+
+donde hemos omitido la dependencia temporal por simplicidad de notaci\'on. De esta forma la ecuaci\'on (\ref{ecschooperadores}) puede ser escrita como (v\'ease \cite{cohen} complemento $E_{III}$): 
+\begin{equation}
+\frac{d}{dt}\rho(t)= \frac{1}{i\hbar}\left[H(t),\rho(t)\right].\label{ecschorho}
+\end{equation}
+
+\quad Ade\'mas se tiene que, si $\hat{O}$ es un observable, asociado a la cantidad f\'isica $o$, entonces el valor esperado $\bar{o}$ de $o$ en un tiempo $t$ est\'a dado por:
+
+\begin{equation}
+ \bar{o}=tr\left(\hat{O}\rho(t)\right).\label{ec:traza_opRho}
+\end{equation}
+
+
+\quad Ahora bien, en nuestro modelo, consideraremos la visi\'on m\'as realista en la cual existen p\'erdidas de energ\'ia en el sistema, que corresponden a p\'erdidas de energ\'ia producto de imperfecciones en los espejos de la cavidad y en emisiones espont\'aneas (v\'ease (\ref{absorcion})). Estas p\'erdidas, se describen mediante el operador \emph{Limbladiano} que debe ser agregado a la ecuaci\'on (\ref{ecschorho}), as\'i, la forma de la ecuaci\'on de evoluci\'on en nuestro trabajo ser\'a:
+\begin{equation}
+\frac{d}{dt}\rho(t)= \frac{1}{i\hbar}\left[H(t),\rho(t)\right]+\mathcal{L}(\rho).\label{ecschorholimb}
+\end{equation}
+
+\quad En un problema en particular, debemos entonces determinar primero, cu\'al es el espacio $\mathcal{H}$ con el cual modelaremos el problema f\'isico. Para luego determinar los operadores $H$ y $\mathcal{L}$, Hamiltoniano y Limbladiano respectivamente. En la secci\'on (\ref{HatHaHb}), ya hemos resuelto la primera pregunta, aunque un breve ajuste deber\'a ser hecho cuando agreguemos ruido t\'ermico en la siguiente secci\'on.\\
+
+\quad En cuanto al Hamiltoniano del sistema, este puede ser descrito como la suma de los Hamiltonianos de los sistemas componentes por separado (v\'ease (\ref{HatHaHb})), suma que denotaremos por $H_0$ y el Hamiltoniano que describe la interacci\'on entre los sistemas, en particular, la interacci\'on entre cada modo y el \'atomo, adem\'as de la interacci\'on entre los l\'aseres y los niveles at\'omicos relacionados. Este \'ultimo Hamiltoniano ser\'a denotado por $H_I$:
+\begin{eqnarray}
+ H=H_0+H_I.
+\end{eqnarray}
+
+\quad Ahora, la energ\'ia presente (o \emph{almacenada}) en el modo $a$ del campo electromagn\'etico corresponde al \emph{n\'umero promedio de fotones presente en el modo $a$}, $n_a$, ponderado por la frecuencia particular del modo $a$, $\omega_a$. El operador asociado a la cantidad $n_a$, denotado por $\hat{n}_a$ corresponde a la composici\'on de su operador creaci\'n con su operador de aniquilaci\'on asociados, es decir $\hat{n}_a=\hat{a}^\dag \hat{a}$. As\'i, la energ\'ia presente en el modo $a$ es calculada utilizando el operador\footnote{En este expresi\'on, y en otras durante el presente trabajo, omitimos $\hbar$ (en este caso en la expresi\'on $\hbar\omega_a\hat{a}^\dag \hat{a}$) ya que consideraremos esta constante igual a la unidad.}:
+
+$$\omega_a\,\hat{a}^\dag \hat{a}.$$
+
+\quad An\'alogamente, el operador: $$\omega_b\,\hat{b}^\dag \hat{b},$$
+
+es utilizado en el c\'alculo de la energ\'ia presente en el modo $b$. Finalmente, la energ\'ia presente en el \'atomo (considerando s\'olo la energ\'ia presente en los niveles considerados por el modelo) corresponde a la suma de los proyectores de cada nivel $i$, ponderado por su frecuencia natural $\omega_i$ de oscilaci\'on:
+\begin{equation}
+ H_0=\omega_a \hat{a}^\dag \hat{a} + \omega_b \hat{b}^\dag \hat{b}+\sum_{i=0}^4 \omega_i \ket{i}\bra{i}.\label{ec:H0}
+\end{equation}
+
+\quad Ahora, la el Hamiltoniano de interacci\'on $H_I$ es escrito como\footnote{La notaci\'on ``h.c'' indica que deben sumarse los conjugados de los sumandos escritos previamente.}:
+
+\begin{equation}
+ H_I=\Omega_1(t)\,\ket{3}\bra{1}\,e^{-iv_a t}+\Omega_2(t)\,\ket{4}\bra{0}\,e^{-iv_bt}+g_a\ket{3}\bra{0}\hat{a}+g_b\ket{4}\bra{2}\hat{b}+\mbox{h.c}.\label{ec:HI}
+\end{equation}
+
+\quad Los primeros dos t\'erminos indican la interacci\'on entre los l\'aseres y los niveles at\'omicos asociados, los dos \'ultimos indican el acoplamiento entre los modos del campo y los niveles asociados. Finalmente, el Limbladiano para el modelo sin ruido t\'ermico corresponde a:
+\begin{equation}
+\begin{array}{lcl}
+\mathcal{L}(\rho)&=&\frac{\Gamma_{04}}{2}(2\,a_{04}\rho a^\dag_{04}-a^\dag_{04} a_{04}\rho-\rho\,a^\dag_{04}a_{04})+\\
+&+&\frac{\Gamma_{03}}{2}(2\,a_{04}\rho a^\dag_{03}-a^\dag_{03} a_{03}\rho-\rho\,a^\dag_{03}a_{03})+\\
+&+&\frac{\Gamma_{13}}{2}(2\,a_{13}\rho a^\dag_{13}-a^\dag_{13} a_{13}\rho-\rho\,a^\dag_{13}a_{13})+\\
+&+&\frac{\Gamma_{24}}{2}(2\,a_{24}\rho a^\dag_{24}-a^\dag_{24} a_{24}\rho-\rho\,a^\dag_{24}a_{24})+\\
+&+&\frac{\Gamma_{14}}{2}(2\,a_{14}\rho a^\dag_{14}-a^\dag_{14} a_{14}\rho-\rho\,a^\dag_{14}a_{14})+\\
+
+&+&\kappa_a(2\,\hat{a}\rho \hat{a}^\dag-\hat{a}^\dag\hat{a}\rho - \rho\hat{a}^\dag\hat{a} )+\\
+&+&\kappa_b(2\,\hat{b}\rho \hat{b}^\dag-\hat{b}^\dag\hat{b}\rho - \rho\hat{b}^\dag\hat{b} ).
+
+\end{array}\label{limbladiano}
+\end{equation}
+
+\quad Donde $\kappa_a$ y $\kappa_b$ son las tasas de p\'erdida de la cavidad para cada modo, que supondremos iguales en este trabajo. Adem\'as los $\Gamma_{ij}$ son las tasas de transici\'on entre $\ket{i}$ y $\ket{j}$, hemos despreciado las transiciones entre el nivel $\ket{1}$ y el $\ket{0}$ y entre $\ket{2}$ y $\ket{0}$ puesto que las tasas asociadas son de ocho \'ordenes de magnitud diferentes a las dem\'as tasas y su efecto queda fuera de la escala de tiempo considerada en este trabajo (v\'ease \cite{single-photon-walther}). Finalmente, el estado inicial del sistema se encuentra dado por las siguientes condiciones:
+
+\begin{itemize}
+ \item En cada modo, inicialmente no hay fotones presentes. Por tanto el modo $a$ empieza en el estado $\ket{0}_a$, al igual que el modo $b$ empieza en el estado $\ket{0}_b$.
+\item El \'atomo empieza en el nivel de energ\'ia descrito por $\ket{1}$.
+\end{itemize}
+
+Por tanto, el operador de densidad inicial $\rho(0)=\ket{\psi(0)}\bra{\psi(0)}$ se puede considerando:
+
+\begin{equation}
+ \ket{\psi(0)}=\ket{1}\otimes \ket{0}_a \otimes \ket{0}_b.\label{rho0}
+\end{equation}
+
+\quad As\'i, el conjunto dado por (\ref{ecschorholimb}), (\ref{ec:H0}), (\ref{ec:HI}), (\ref{limbladiano}) y (\ref{rho0}) describe el problema matem\'atico a resolver para analizar la evoluci\'on del sistema f\'isico descrito en (\ref{ionca}).
+
+\subsubsection{Adici\'on de Ruido t\'ermico}\label{ruidotermico}
+\quad Un caso f\'isico m\'as realista que el presentado en las secciones anteriores, es el que se obtiene al considerar que la cavidad se encuentra en un \emph{ba\~no t\'ermico}, esto es, no existe un vac\'io perfecto en la cavidad. El efecto de esta hip\'otesis, es estudiado en \cite{carmichael} secci\'on 1.3 para el caso de equilibro t\'ermico y su efecto en nuestro modelo ser\'a a\~nadir el t\'ermino:
+\begin{equation}
+ 2\kappa\bar{n}(\hat{a}\rho\hat{a}^\dag+\hat{a}^\dag\rho \hat{a}-\hat{a}^\dag \hat{a}\rho-\rho \hat{a} \hat{a}^\dag),\label{ruido}
+\end{equation}
+
+al limbladiano (\ref{limbladiano}) por cada modo, $a$ y $b$, reemplazando $\hat{a}$ ($\hat{a}^\dag$) por el respectivo operador de aniquilaci\'on (creaci\'on). La constante $\bar{n}$ es el n\'umero de fotones promedio a temperatura $T$ para el modo involucrado.
+
+% \Pag{Integraci\'on Ecuaci\'on Maestra}
+% \sectionm{Integraci\'on Ecuaci\'on Maestra}
+\subsection{Problema a resolver}\label{sec:problema_resolver}
+\quad Recordemos que el problema a resolver, visto en la secci\'on (\ref{ecuacionmaestra}), es el encontrar $\rho\in \mathcal{C}^2_0\left([0,t_f],\mathbb{C}^n\right)$, y definido en (\ref{operadordensidad}), donde $n$ es la dimensi\'on total resultado del producto de las dimensiones de los espacios componentes vistos en (\ref{HatHaHb}) y $t_f=\frac{100}{\kappa}$, con $\kappa$ igual a la tasa de p\'erdida de energ\'ia de las cavidades, v\'ease \cite{single-photon-walther}. Siendo la ecuaci\'on a satisfacer:
+\begin{eqnarray}
+ \frac{d}{dt}\rho(t)&=&f\left(t,\rho(t)\right)\\
+&=&-i\hbar\left[H(t),\rho(t)\right]+\mathcal{L}(\rho(t)),\label{ec_maestra_integracion}
+\end{eqnarray}
+con $H$ y $\mathcal{L}$ dados por (\ref{ec:H0}) + (\ref{ec:HI}) y (\ref{limbladiano}) respectivamente. Adem\'as $t_f$ es el tiempo final que define el intervalo sobre el cual se desea resolver. Finalmente se tiene la condici\'on inicial:
+\begin{equation}
+ \rho(0)=\ket{\psi(0)}\bra{\psi(0)},\hspace*{1.3cm}\ket{\psi(0)}=\ket{1}\otimes\ket{0}_a\otimes \ket{0}_b.
+\end{equation}
+
+\quad En este trabajo, se resolver\'a este problema mediante integraci\'on num\'erica utilizando el m\'etodo de Heun, sobre una malla temporal equiespaciada $t_i,$ $i=1\ldots N$, $N=20000$, $t_1=0\ldotp0s$ y $t_N=t_f$. El an\'alisis de la conveniencia de este m\'etodo por sobre otros para este problema, es realizado en \cite{gino}. Debemos destacar que la Continuidad y Diferenciabilidad de la Ecuaci\'on Maestra siguen siendo v\'alidas tras agregar el ruido t\'ermico, puesto que esto s\'olo a\~nade t\'erminos del tipo $\Vert C_m\Vert$ en la constante de acotaci\'on $M$ en el Cap\'itulo 6 de \cite{gino}, lo mismo ocurre en el an\'alisis del cumplimiento de la condici\'on de Lipschitz en la segunda variable de $f$.
+
+\subsubsection{M\'etodo de integraci\'on de Heun}
+\quad Este m\'etodo num\'erico de integraci\'on es del tipo \emph{predictor-corrector} de segundo orden. Como hip\'otesis para la utilizaci\'on del m\'etodo, supondremos que $f\in \mathcal{C}_0^2([0,t_f]\times\mathcal{H})$ de $\ref{ec_maestra_integracion}$ cumple la condici\'on de Lipschitz, esto es, $\exists L\in \mathbb{R}^+_0$ tal que:
+
+$$\vert f(t,\rho)-f(t,\rho')\vert\leq L\Vert \rho-\rho'\Vert_\mathcal{H}$$
+
+$\forall\, t\in[0,t_f],\; \forall\,\rho,\rho'\in\mathcal{H}.$
+
+\quad Definiremos adem\'as la partici\'on $t_0=0<t_1<\ldots<t_N=t_f$ del intervalo $[0,t_f]$ que ser\'a utilizado por el m\'etodo. El m\'etodo de Huen, consiste en utilizar como predictor, el m\'etodo Runge-Kutta de segundo orden, y como corrector el m\'etodo del Trapecio. As\'i, el algoritmo de integraci\'on para nuestro problema resulta ser:
+
+\begin{algorithm}[H]
+\caption{M\'etodo de Heun}\label{algo:heun}
+% \SetAlgoLined
+\LinesNumbered
+\KwIn{$f$, $Y_0$, $h$, $n$, $\{t_i\}_{i=0}^{n-1}$, $\epsilon$}
+\KwOut{$\{Y_i\}_{i=0}^{n-1}$}
+\Begin{\For{$i=0$ hasta $i=n-1$}
+  {
+  $Y_{i+1}^{(0)}=Y_i+hf(t_i,Y_i)$\;
+  $Y_{i+1}^{(1)}=Y_i+\frac{h}{2}\left\{f(t_i,Y_i+f\left(t_{i+1},Y_{i+1}^{(0)})\right)\right\}$\;
+  $error=errRel\left(Y_{i+1}^{(1)},Y_{i+1}^{(0)}\right)$\;
+  $k=2$\;
+  \While{$error>\epsilon$}{
+    $Y_{i+1}^{(k)}=Y_i+\frac{h}{2}\left\{f\left(t_i,Y_i+f(t_{i+1},Y_{i+1}^{(k-1)})\right)\right\}$\;
+    $error=errRel\left(Y_{i+1}^{(k)},Y_{i+1}^{(k-1)}\right)$\;
+    $k=k+1$\;
+  }
+  $Y_{i+1}=Y_{i+1}^{(k)}$\;
+}
+}
+\end{algorithm}
+
+\quad Donde $Y_0$ es el punto inicial $\rho(0)$, $h$ es el paso de integraci\'on (v\'ease \cite{gino} Cap. 7), $n$ es el tama\~no de la malla temporal y $\epsilon$ es la tolerancia del m\'etodo corrector, en este trabajo $\epsilon=1E-6$.
+
+\subsubsection{Truncamiento de dimensi\'on para $\mathcal{H}_a$ y $\mathcal{H}_b$}
